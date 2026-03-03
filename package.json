@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/canakkus/CyberLingo/issues"
   },
-  "homepage": "https://github.com/canakkus/CyberLingo#readme"
+  "homepage": "https://github.com/canakkus/CyberLingo#readme",
+  "dependencies": {
+    "vue3-google-login": "^2.0.37"
+  }
 }
