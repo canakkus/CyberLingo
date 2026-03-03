@@ -36,7 +36,7 @@
             </svg>
             Missionen starten
           </button>
-        </form>n
+        </form>
       </transition>
     </div>
   </div>
@@ -83,7 +83,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Work+Sams:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;600;700&display=swap');
 
 .font-work-sans { font-family: 'Work Sans', sans-serif; }
 
