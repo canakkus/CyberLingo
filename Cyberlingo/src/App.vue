@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <main v-if="currentPage === 'landing'" class="landing">
     <section class="hero">
       <p class="eyebrow">CyberLingo</p>
@@ -93,39 +93,76 @@
   </main>
 
   <main v-else class="onboarding-page">
-    <section class="onboarding-card">
-      <p class="eyebrow">Onboarding</p>
-      <h2>Niveau fuer den AI Assistant festlegen</h2>
-      <p class="auth-subtitle">
-        Das Startniveau wird spaeter fuer Missionstiefe, Erklaerungen und Vorschlaege verwendet.
-      </p>
+    <section class="onboarding-card duolingo-card">
+      <div class="character-header">
+        <div class="avatar-robot">🤖</div>
+        <div class="speech-bubble">
+          Wie viel Cybersecurity kannst du schon?
+        </div>
+      </div>
 
       <form class="level-form" @submit.prevent="completeOnboarding">
         <label class="level-option" :class="{ selected: level === 'beginner' }">
           <input v-model="level" type="radio" value="beginner" name="level" />
-          <div>
-            <strong>Beginner</strong>
-            <p>Kaum Vorkenntnisse, Fokus auf Grundlagen.</p>
+          <div class="icon-signal">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
+              <rect x="8" y="12" width="4" height="8" rx="1" fill="#334155" />
+              <rect x="14" y="8" width="4" height="12" rx="1" fill="#334155" />
+              <rect x="20" y="4" width="4" height="16" rx="1" fill="#334155" />
+            </svg>
+          </div>
+          <div class="level-text">
+            Ich fange ganz neu mit Cybersecurity an.
           </div>
         </label>
 
         <label class="level-option" :class="{ selected: level === 'intermediate' }">
           <input v-model="level" type="radio" value="intermediate" name="level" />
-          <div>
-            <strong>Intermediate</strong>
-            <p>Grundlagen vorhanden, mehr Praxis und Analyse.</p>
+          <div class="icon-signal">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
+              <rect x="8" y="12" width="4" height="8" rx="1" fill="#1fb39c" />
+              <rect x="14" y="8" width="4" height="12" rx="1" fill="#334155" />
+              <rect x="20" y="4" width="4" height="16" rx="1" fill="#334155" />
+            </svg>
+          </div>
+          <div class="level-text">
+            Ich kenne gängige Begriffe und Angriffsarten.
           </div>
         </label>
 
         <label class="level-option" :class="{ selected: level === 'advanced' }">
           <input v-model="level" type="radio" value="advanced" name="level" />
-          <div>
-            <strong>Advanced</strong>
-            <p>Technisch tief, realistische Angriffs- und Defense-Szenarien.</p>
+          <div class="icon-signal">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
+              <rect x="8" y="12" width="4" height="8" rx="1" fill="#1fb39c" />
+              <rect x="14" y="8" width="4" height="12" rx="1" fill="#1fb39c" />
+              <rect x="20" y="4" width="4" height="16" rx="1" fill="#334155" />
+            </svg>
+          </div>
+          <div class="level-text">
+            Ich weiß gut über IT-Sicherheit Bescheid (Praxis).
+          </div>
+        </label>
+        
+        <label class="level-option" :class="{ selected: level === 'expert' }">
+          <input v-model="level" type="radio" value="expert" name="level" />
+          <div class="icon-signal">
+            <svg viewBox="0 0 24 24" width="24" height="24">
+              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
+              <rect x="8" y="12" width="4" height="8" rx="1" fill="#1fb39c" />
+              <rect x="14" y="8" width="4" height="12" rx="1" fill="#1fb39c" />
+              <rect x="20" y="4" width="4" height="16" rx="1" fill="#1fb39c" />
+            </svg>
+          </div>
+          <div class="level-text">
+            Ich kann mich detailliert und technisch äußern.
           </div>
         </label>
 
-        <button type="submit" class="primary-btn">Profil speichern</button>
+        <button type="submit" class="primary-btn continue-btn">WEITER</button>
       </form>
     </section>
   </main>
@@ -256,6 +293,92 @@ onUnmounted(() => {
   padding: 1.5rem;
 }
 
+.duolingo-card {
+  max-width: 600px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.character-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  justify-content: center;
+}
+
+.avatar-robot {
+  font-size: 4.5rem;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+}
+
+.speech-bubble {
+  position: relative;
+  background: #1e293b;
+  border: 2px solid #334155;
+  border-radius: 16px;
+  padding: 1.25rem 1.75rem;
+  font-family: 'Space Grotesk', 'Work Sans', sans-serif;
+  font-size: 1.25rem;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+@media (min-width: 601px) {
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-style: solid;
+    left: -12px;
+    border-width: 10px 12px 10px 0;
+    border-color: transparent #334155 transparent transparent;
+    z-index: 1;
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    border-style: solid;
+    left: -9px;
+    border-width: 8px 10px 8px 0;
+    border-color: transparent #1e293b transparent transparent;
+    z-index: 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .character-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    border-style: solid;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 10px 12px 10px;
+    border-color: transparent transparent #334155 transparent;
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    border-style: solid;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 0 8px 10px 8px;
+    border-color: transparent transparent #1e293b transparent;
+  }
+}
+
 .eyebrow {
   font-family: 'JetBrains Mono', monospace;
   margin: 0;
@@ -330,6 +453,14 @@ h1 {
   padding: 0.6rem;
   font: inherit;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tab:not(.active):hover {
+  background: #172a48;
+  color: #c6d6ee;
+  border-color: #3b5a8e;
+  transform: translateY(-1px);
 }
 
 .tab.active {
@@ -408,11 +539,19 @@ h2 {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-  transition: filter 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .primary-btn:hover {
-  filter: brightness(1.08);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(28, 184, 160, 0.25);
+}
+
+.primary-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(28, 184, 160, 0.2);
 }
 
 .divider {
@@ -439,35 +578,58 @@ h2 {
 }
 
 .level-option {
-  border: 1px solid #2f496f;
-  background: #101d33;
-  border-radius: 12px;
-  padding: 0.8rem;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.7rem;
-  align-items: start;
+  border: 2px solid #334155;
+  background: transparent;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 0.75rem;
+}
+
+.level-option:not(.selected):hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: #475569;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .level-option.selected {
   border-color: #2db39f;
-  background: linear-gradient(180deg, #17344d, #12283e);
+  background: rgba(45, 179, 159, 0.1);
 }
 
 .level-option input {
-  margin-top: 0.25rem;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.level-option strong {
-  display: block;
-  color: #f0f6ff;
+.icon-signal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.level-option p {
-  margin: 0.25rem 0 0;
-  color: #a6bcdb;
-  font-size: 0.92rem;
+.level-text {
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #f8fafc;
+}
+
+.continue-btn {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 1.1rem;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
 }
 
 @media (max-width: 900px) {
