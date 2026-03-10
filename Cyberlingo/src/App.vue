@@ -55,10 +55,10 @@
 
         <template v-if="mode === 'register'">
           <ul class="password-rules">
-            <li :class="{ ok: passwordChecks.hasLength }">Mindestens 8 Zeichen</li>
-            <li :class="{ ok: passwordChecks.hasSpecial }">Mindestens 1 Sonderzeichen</li>
-            <li :class="{ ok: passwordChecks.hasNumber }">Mindestens 1 Zahl</li>
-            <li :class="{ ok: passwordChecks.hasUpper }">Mindestens 1 Grossbuchstabe</li>
+            <li :class="{ ok: passwordChecks.hasLength, error: !passwordChecks.hasLength && password.length > 0 }">Mindestens 8 Zeichen</li>
+            <li :class="{ ok: passwordChecks.hasSpecial, error: !passwordChecks.hasSpecial && password.length > 0 }">Mindestens 1 Sonderzeichen</li>
+            <li :class="{ ok: passwordChecks.hasNumber, error: !passwordChecks.hasNumber && password.length > 0 }">Mindestens 1 Zahl</li>
+            <li :class="{ ok: passwordChecks.hasUpper, error: !passwordChecks.hasUpper && password.length > 0 }">Mindestens 1 Grossbuchstabe</li>
           </ul>
 
           <label for="displayName">Anzeigename</label>
@@ -68,7 +68,7 @@
         <p v-if="authError" class="auth-error">{{ authError }}</p>
 
         <button type="submit" class="primary-btn">
-          {{ mode === 'login' ? 'Einloggen' : 'Weiter zur Niveauauswahl' }}
+          {{ mode === 'login' ? 'Einloggen' : 'Registrieren' }}
         </button>
       </form>
 
@@ -92,79 +92,107 @@
     </section>
   </main>
 
-  <main v-else class="onboarding-page">
-    <section class="onboarding-card duolingo-card">
-      <div class="character-header">
-        <div class="avatar-robot">🤖</div>
-        <div class="speech-bubble">
-          Wie viel Cybersecurity kannst du schon?
+  <main v-else-if="currentPage === 'team-selection'" class="team-selection">
+    <div class="team-cards-container">
+      <h2>Wähle deine Seite</h2>
+      <p class="subtitle">Entscheide dich für einen Lernpfad. Du kannst dies später jederzeit ändern.</p>
+      
+      <div class="teams-wrapper">
+        <button class="team-card blue-team" @click="selectTeam('blue')">
+          <div class="icon-placeholder">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Blue Team Icon Placeholder" />
+          </div>
+          <h3>Blue Team</h3>
+          <p>Verteidige Systeme, analysiere Bedrohungen und sichere Netzwerke ab.</p>
+        </button>
+
+        <button class="team-card red-team" @click="selectTeam('red')">
+          <div class="icon-placeholder">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Red Team Icon Placeholder" />
+          </div>
+          <h3>Red Team</h3>
+          <p>Denke wie ein Angreifer, finde Schwachstellen und teste Systeme.</p>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <main v-else-if="currentPage === 'dashboard'" class="dashboard">
+    <aside class="nav-sidebar">
+      <nav>
+        <button class="nav-btn">
+          <span class="icon">👤</span>
+          Profile
+        </button>
+        <button class="nav-btn">
+          <span class="icon">🛒</span>
+          Store
+        </button>
+        <button class="nav-btn">
+          <span class="icon">🔔</span>
+          Notifications
+        </button>
+      </nav>
+    </aside>
+
+    <section class="main-content">
+      <header class="main-header">
+        <h2>MAIN PAGE</h2>
+      </header>
+
+      <div class="difficulty-grid">
+        <button class="diff-card beginner">
+          <h3>BEGINNER</h3>
+        </button>
+        <button class="diff-card intermediate">
+          <h3>INTERMEDIATE</h3>
+        </button>
+        <button class="diff-card pro">
+          <h3>PRO</h3>
+        </button>
+      </div>
+    </section>
+
+    <aside class="stats-sidebar">
+      <div class="stats-header">
+        <div class="team-badge" :class="selectedTeam">
+          {{ selectedTeam === 'red' ? 'RED TEAM' : 'BLUE TEAM' }}
+        </div>
+        <div class="stat-item">
+          <span class="label">XP</span>
+          <span class="value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">LEVEL</span>
+          <span class="value">1</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">STREAK</span>
+          <span class="value">0</span>
         </div>
       </div>
 
-      <form class="level-form" @submit.prevent="completeOnboarding">
-        <label class="level-option" :class="{ selected: level === 'beginner' }">
-          <input v-model="level" type="radio" value="beginner" name="level" />
-          <div class="icon-signal">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
-              <rect x="8" y="12" width="4" height="8" rx="1" fill="#334155" />
-              <rect x="14" y="8" width="4" height="12" rx="1" fill="#334155" />
-              <rect x="20" y="4" width="4" height="16" rx="1" fill="#334155" />
-            </svg>
+      <div class="quests-section">
+        <h3>QUESTS</h3>
+        <div class="quest-list">
+          <!-- Placeholder for quests -->
+          <div class="quest-item">
+            <div class="quest-icon">🎯</div>
+            <div class="quest-details">
+              <h4>Erstes Login</h4>
+              <p>50 / 50 XP</p>
+            </div>
           </div>
-          <div class="level-text">
-            Ich fange ganz neu mit Cybersecurity an.
+          <div class="quest-item locked">
+            <div class="quest-icon">🔒</div>
+            <div class="quest-details">
+              <h4>Absolviere 1 Lektion</h4>
+              <p>0 / 100 XP</p>
+            </div>
           </div>
-        </label>
-
-        <label class="level-option" :class="{ selected: level === 'intermediate' }">
-          <input v-model="level" type="radio" value="intermediate" name="level" />
-          <div class="icon-signal">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
-              <rect x="8" y="12" width="4" height="8" rx="1" fill="#1fb39c" />
-              <rect x="14" y="8" width="4" height="12" rx="1" fill="#334155" />
-              <rect x="20" y="4" width="4" height="16" rx="1" fill="#334155" />
-            </svg>
-          </div>
-          <div class="level-text">
-            Ich kenne gängige Begriffe und Angriffsarten.
-          </div>
-        </label>
-
-        <label class="level-option" :class="{ selected: level === 'advanced' }">
-          <input v-model="level" type="radio" value="advanced" name="level" />
-          <div class="icon-signal">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
-              <rect x="8" y="12" width="4" height="8" rx="1" fill="#1fb39c" />
-              <rect x="14" y="8" width="4" height="12" rx="1" fill="#1fb39c" />
-              <rect x="20" y="4" width="4" height="16" rx="1" fill="#334155" />
-            </svg>
-          </div>
-          <div class="level-text">
-            Ich weiß gut über IT-Sicherheit Bescheid (Praxis).
-          </div>
-        </label>
-        
-        <label class="level-option" :class="{ selected: level === 'expert' }">
-          <input v-model="level" type="radio" value="expert" name="level" />
-          <div class="icon-signal">
-            <svg viewBox="0 0 24 24" width="24" height="24">
-              <rect x="2" y="16" width="4" height="4" rx="1" fill="#1fb39c" />
-              <rect x="8" y="12" width="4" height="8" rx="1" fill="#1fb39c" />
-              <rect x="14" y="8" width="4" height="12" rx="1" fill="#1fb39c" />
-              <rect x="20" y="4" width="4" height="16" rx="1" fill="#1fb39c" />
-            </svg>
-          </div>
-          <div class="level-text">
-            Ich kann mich detailliert und technisch äußern.
-          </div>
-        </label>
-
-        <button type="submit" class="primary-btn continue-btn">WEITER</button>
-      </form>
-    </section>
+        </div>
+      </div>
+    </aside>
   </main>
 </template>
 
@@ -176,8 +204,8 @@ const mode = ref('login')
 const email = ref('')
 const password = ref('')
 const displayName = ref('')
-const level = ref('beginner')
 const authError = ref('')
+const selectedTeam = ref('')
 
 const passwordChecks = computed(() => ({
   hasLength: password.value.length >= 8,
@@ -205,17 +233,20 @@ function submitAuth() {
     return
   }
 
-  currentPage.value = 'onboarding'
+  // Go to team selection after successful registration
+  currentPage.value = 'team-selection'
 }
 
-function completeOnboarding() {
-  alert(`Registrierung abgeschlossen fuer ${displayName.value} (Level: ${level.value}).`)
+function selectTeam(team) {
+  selectedTeam.value = team
+  currentPage.value = 'dashboard'
 }
 
 window.handleCredentialResponse = (response) => {
   const payload = decodeJwtResponse(response?.credential)
   if (!payload) return
-  alert(`Google Login erfolgreich: ${payload.email || payload.name || 'User'}`)
+  // Go to team selection after successful Google login
+  currentPage.value = 'team-selection'
 }
 
 function decodeJwtResponse(token) {
@@ -255,15 +286,11 @@ onUnmounted(() => {
   color: #dce9ff;
 }
 
-.landing,
-.onboarding-page {
+.landing {
   min-height: 100vh;
   padding: 2rem 1rem;
   max-width: 1100px;
   margin: 0 auto;
-}
-
-.landing {
   display: grid;
   gap: 1rem;
   grid-template-columns: 1.2fr 0.8fr;
@@ -271,8 +298,7 @@ onUnmounted(() => {
 }
 
 .hero,
-.auth-card,
-.onboarding-card {
+.auth-card {
   border: 1px solid #243a5c;
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(10, 20, 36, 0.95), rgba(10, 18, 31, 0.95));
@@ -287,97 +313,6 @@ onUnmounted(() => {
     linear-gradient(180deg, rgba(10, 20, 36, 0.95), rgba(10, 18, 31, 0.95));
 }
 
-.onboarding-card {
-  max-width: 760px;
-  margin: 4rem auto;
-  padding: 1.5rem;
-}
-
-.duolingo-card {
-  max-width: 600px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-
-.character-header {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
-  justify-content: center;
-}
-
-.avatar-robot {
-  font-size: 4.5rem;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-}
-
-.speech-bubble {
-  position: relative;
-  background: #1e293b;
-  border: 2px solid #334155;
-  border-radius: 16px;
-  padding: 1.25rem 1.75rem;
-  font-family: 'Space Grotesk', 'Work Sans', sans-serif;
-  font-size: 1.25rem;
-  color: #f1f5f9;
-  font-weight: 600;
-}
-
-@media (min-width: 601px) {
-  .speech-bubble::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    border-style: solid;
-    left: -12px;
-    border-width: 10px 12px 10px 0;
-    border-color: transparent #334155 transparent transparent;
-    z-index: 1;
-  }
-  .speech-bubble::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    border-style: solid;
-    left: -9px;
-    border-width: 8px 10px 8px 0;
-    border-color: transparent #1e293b transparent transparent;
-    z-index: 2;
-  }
-}
-
-@media (max-width: 600px) {
-  .character-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
-  }
-  .speech-bubble::before {
-    content: '';
-    position: absolute;
-    border-style: solid;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 0 10px 12px 10px;
-    border-color: transparent transparent #334155 transparent;
-  }
-  .speech-bubble::after {
-    content: '';
-    position: absolute;
-    border-style: solid;
-    top: -9px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 0 8px 10px 8px;
-    border-color: transparent transparent #1e293b transparent;
-  }
-}
 
 .eyebrow {
   font-family: 'JetBrains Mono', monospace;
@@ -481,8 +416,7 @@ h2 {
   color: #a6bcdb;
 }
 
-.auth-form,
-.level-form {
+.auth-form {
   display: grid;
   gap: 0.55rem;
 }
@@ -517,10 +451,15 @@ h2 {
 .password-rules li {
   color: #8ba6cb;
   font-size: 0.86rem;
+  transition: color 0.3s ease;
 }
 
 .password-rules li.ok {
   color: #67d2bc;
+}
+
+.password-rules li.error {
+  color: #ff8793;
 }
 
 .auth-error {
@@ -577,60 +516,7 @@ h2 {
   background: #0d192c;
 }
 
-.level-option {
-  border: 2px solid #334155;
-  background: transparent;
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  margin-bottom: 0.75rem;
-}
 
-.level-option:not(.selected):hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: #475569;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.level-option.selected {
-  border-color: #2db39f;
-  background: rgba(45, 179, 159, 0.1);
-}
-
-.level-option input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.icon-signal {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.level-text {
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: #f8fafc;
-}
-
-.continue-btn {
-  width: 100%;
-  margin-top: 1rem;
-  padding: 1.1rem;
-  border-radius: 16px;
-  font-size: 1.1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 700;
-}
 
 @media (max-width: 900px) {
   .landing {
@@ -640,9 +526,454 @@ h2 {
   .hero {
     padding: 1.4rem;
   }
+}
 
-  .onboarding-card {
-    margin: 2rem auto;
+/* --- Team Selection Page Styles --- */
+.team-selection {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.team-cards-container {
+  text-align: center;
+  width: 100%;
+}
+
+.team-cards-container h2 {
+  font-family: 'Space Grotesk', 'Work Sans', sans-serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin: 0 0 0.5rem;
+  color: #f1f7ff;
+}
+
+.team-cards-container .subtitle {
+  color: #a6bcdb;
+  margin: 0 0 3.5rem;
+  font-size: 1.15rem;
+}
+
+.teams-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .teams-wrapper {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.team-card {
+  background: linear-gradient(180deg, rgba(16, 29, 51, 0.4), rgba(10, 18, 31, 0.8));
+  border: 1px solid #243a5c;
+  border-radius: 28px;
+  padding: 3.5rem 2.5rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  font: inherit;
+  color: inherit;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.icon-placeholder {
+  width: 140px;
+  height: 140px;
+  background-color: #050a14;
+  border-radius: 24px;
+  border: 2px dashed #2f496f;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+.icon-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  transition: opacity 0.4s ease;
+}
+
+.team-card h3 {
+  font-family: 'Space Grotesk', 'Work Sans', sans-serif;
+  font-size: 2rem;
+  margin: 0;
+  color: #f1f7ff;
+  transition: color 0.4s ease;
+}
+
+.team-card p {
+  color: #95afcf;
+  margin: 0;
+  line-height: 1.6;
+  font-size: 1.05rem;
+  transition: color 0.4s ease;
+}
+
+/* Blue Team Hover Effects */
+.blue-team {
+  border-color: rgba(31, 179, 156, 0.2);
+}
+
+.blue-team:hover {
+  transform: translateY(-8px);
+  border-color: #1fb39c;
+  box-shadow: 0 20px 50px rgba(31, 179, 156, 0.15), 0 0 0 1px rgba(31, 179, 156, 0.5);
+  background: linear-gradient(180deg, rgba(19, 59, 74, 0.8), rgba(10, 18, 31, 0.95));
+}
+
+.blue-team:hover .icon-placeholder {
+  border-color: #1fb39c;
+  box-shadow: 0 0 30px rgba(31, 179, 156, 0.3);
+  transform: scale(1.05);
+}
+
+.blue-team:hover .icon-placeholder img {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(31, 179, 156, 0.5));
+}
+
+.blue-team:hover h3 {
+  color: #53c7b5;
+  text-shadow: 0 0 20px rgba(31, 179, 156, 0.4);
+}
+
+.blue-team:hover p {
+  color: #c0d8f0;
+}
+
+.blue-team:active {
+  transform: translateY(-2px);
+}
+
+/* Red Team Hover Effects */
+.red-team {
+  border-color: rgba(226, 88, 110, 0.2);
+}
+
+.red-team:hover {
+  transform: translateY(-8px);
+  border-color: #e2586e;
+  box-shadow: 0 20px 50px rgba(226, 88, 110, 0.15), 0 0 0 1px rgba(226, 88, 110, 0.5);
+  background: linear-gradient(180deg, rgba(74, 25, 36, 0.8), rgba(10, 18, 31, 0.95));
+}
+
+.red-team:hover .icon-placeholder {
+  border-color: #e2586e;
+  box-shadow: 0 0 30px rgba(226, 88, 110, 0.3);
+  transform: scale(1.05);
+}
+
+.red-team:hover .icon-placeholder img {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(226, 88, 110, 0.5));
+}
+
+.red-team:hover h3 {
+  color: #f77e91;
+  text-shadow: 0 0 20px rgba(226, 88, 110, 0.4);
+}
+
+.red-team:hover p {
+  color: #fbe0e4;
+}
+
+.red-team:active {
+  transform: translateY(-2px);
+}
+
+/* --- Dashboard Page Styles --- */
+.dashboard {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 240px 1fr 320px;
+  gap: 2rem;
+  padding: 1.5rem;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Dashboard: Nav Sidebar */
+.nav-sidebar {
+  border-right: 1px solid #243a5c;
+  padding-right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: sticky;
+  top: 2rem;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  color: #a6bcdb;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.nav-btn:hover {
+  background: rgba(36, 58, 92, 0.4);
+  color: #f1f7ff;
+  border-color: #243a5c;
+  transform: translateX(4px);
+}
+
+.nav-btn .icon {
+  font-size: 1.4rem;
+}
+
+/* Dashboard: Main Content */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1rem 0;
+}
+
+.main-header h2 {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 1.5rem;
+  color: #7e97bc;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0 0 2rem 0;
+}
+
+.difficulty-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.diff-card {
+  background: linear-gradient(180deg, rgba(16, 29, 51, 0.6), rgba(10, 18, 31, 0.9));
+  border: 1px solid #243a5c;
+  border-radius: 20px;
+  padding: 2.5rem 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 200px;
+}
+
+.diff-card h3 {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 1.4rem;
+  color: #f1f7ff;
+  margin: 0;
+  transition: transform 0.3s ease;
+}
+
+.diff-card:hover {
+  transform: translateY(-4px);
+  background: linear-gradient(180deg, rgba(23, 42, 71, 0.8), rgba(10, 18, 31, 0.95));
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+.diff-card:hover h3 {
+  transform: scale(1.05);
+}
+
+.diff-card.beginner:hover { border-color: #1fb39c; box-shadow: 0 8px 24px rgba(31, 179, 156, 0.15); }
+.diff-card.intermediate:hover { border-color: #f39c12; box-shadow: 0 8px 24px rgba(243, 156, 18, 0.15); }
+.diff-card.pro:hover { border-color: #e2586e; box-shadow: 0 8px 24px rgba(226, 88, 110, 0.15); }
+
+/* Dashboard: Stats Sidebar */
+.stats-sidebar {
+  border-left: 1px solid #243a5c;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+
+.stats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(16, 29, 51, 0.4);
+  border: 1px solid #243a5c;
+  border-radius: 16px;
+  flex-wrap: wrap;
+}
+
+.team-badge {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  letter-spacing: 0.05em;
+}
+
+.team-badge.red {
+  background: rgba(226, 88, 110, 0.15);
+  color: #f77e91;
+  border: 1px solid rgba(226, 88, 110, 0.3);
+}
+
+.team-badge.blue {
+  background: rgba(31, 179, 156, 0.15);
+  color: #53c7b5;
+  border: 1px solid rgba(31, 179, 156, 0.3);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.stat-item .label {
+  font-size: 0.7rem;
+  color: #7e97bc;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.stat-item .value {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 1.1rem;
+  color: #f1f7ff;
+  font-weight: 600;
+}
+
+.quests-section h3 {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 1.5rem;
+  color: #f1f7ff;
+  margin: 0 0 1.5rem 0;
+  letter-spacing: 0.05em;
+}
+
+.quest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quest-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: rgba(16, 29, 51, 0.4);
+  border: 1px solid #243a5c;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.quest-item:hover {
+  background: rgba(23, 42, 71, 0.6);
+  border-color: #3b5a8e;
+  transform: translateY(-2px);
+}
+
+.quest-item.locked {
+  opacity: 0.6;
+  background: rgba(10, 18, 31, 0.4);
+}
+
+.quest-icon {
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #101d33;
+  border-radius: 12px;
+  border: 1px solid #243a5c;
+}
+
+.quest-details h4 {
+  margin: 0 0 0.25rem 0;
+  color: #e2edff;
+  font-size: 1rem;
+}
+
+.quest-details p {
+  margin: 0;
+  color: #7e97bc;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1200px) {
+  .dashboard {
+    grid-template-columns: 200px 1fr;
+  }
+  .stats-sidebar {
+    grid-column: 1 / -1;
+    border-left: none;
+    border-top: 1px solid #243a5c;
+    padding-left: 0;
+    padding-top: 2rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .quests-section {
+    flex: 1;
+    min-width: 300px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  .nav-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #243a5c;
+    padding-right: 0;
+    padding-bottom: 1.5rem;
+  }
+  .nav-sidebar nav {
+    flex-direction: row;
+    justify-content: center;
+    position: static;
+  }
+  .difficulty-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
