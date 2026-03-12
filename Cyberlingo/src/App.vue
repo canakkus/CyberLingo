@@ -1,275 +1,132 @@
 <template>
-  <main v-if="currentPage === 'landing'" class="landing">
-    <section class="hero">
-      <p class="eyebrow">CyberLingo</p>
-      <h1>Cybersecurity lernen wie eine Sprache.</h1>
-      <p class="lead">
-        Interaktive Missionen, klare Lernpfade und praxisnahe Uebungen fuer Schulen,
-        Teams und Selbstlerner.
-      </p>
+  <div v-if="authStore.loading" class="loading-overlay">
+    <div class="loader"></div>
+  </div>
+  <LandingPage
+    v-else-if="currentPage === 'landing'"
+    @toggle-theme="toggleTheme"
+  />
 
-      <div class="badges">
-        <span>Strukturiert</span>
-        <span>Gamifiziert</span>
-        <span>Praxisnah</span>
-      </div>
-
-      <ul class="benefits">
-        <li>Kurze Lerneinheiten mit messbarem Fortschritt</li>
-        <li>Missionen von Grundlagen bis Incident Response</li>
-        <li>Geeignet fuer HTL, Ausbildung und Onboarding</li>
-      </ul>
-    </section>
-
-    <section class="auth-card">
-      <div class="tab-row">
-        <button
-          type="button"
-          class="tab"
-          :class="{ active: mode === 'login' }"
-          @click="mode = 'login'"
-        >
-          Login
-        </button>
-        <button
-          type="button"
-          class="tab"
-          :class="{ active: mode === 'register' }"
-          @click="mode = 'register'"
-        >
-          Registrieren
-        </button>
-      </div>
-
-      <h2>{{ mode === 'login' ? 'Willkommen zurueck' : 'Konto erstellen' }}</h2>
-      <p class="auth-subtitle">
-        {{ mode === 'login' ? 'Melde dich an und starte deine naechste Mission.' : 'Starte in wenigen Sekunden mit deinem Lernpfad.' }}
-      </p>
-
-      <form class="auth-form" @submit.prevent="submitAuth">
-        <label for="email">E-Mail</label>
-        <input id="email" v-model.trim="email" type="email" required autocomplete="email" />
-
-        <label for="password">Passwort</label>
-        <input id="password" v-model="password" type="password" required autocomplete="current-password" />
-
-        <template v-if="mode === 'register'">
-          <ul class="password-rules">
-            <li :class="{ ok: passwordChecks.hasLength, error: !passwordChecks.hasLength && password.length > 0 }">Mindestens 8 Zeichen</li>
-            <li :class="{ ok: passwordChecks.hasSpecial, error: !passwordChecks.hasSpecial && password.length > 0 }">Mindestens 1 Sonderzeichen</li>
-            <li :class="{ ok: passwordChecks.hasNumber, error: !passwordChecks.hasNumber && password.length > 0 }">Mindestens 1 Zahl</li>
-            <li :class="{ ok: passwordChecks.hasUpper, error: !passwordChecks.hasUpper && password.length > 0 }">Mindestens 1 Grossbuchstabe</li>
-          </ul>
-
-          <label for="displayName">Anzeigename</label>
-          <input id="displayName" v-model.trim="displayName" type="text" required autocomplete="name" />
-        </template>
-
-        <p v-if="authError" class="auth-error">{{ authError }}</p>
-
-        <button type="submit" class="primary-btn">
-          {{ mode === 'login' ? 'Einloggen' : 'Registrieren' }}
-        </button>
-      </form>
-
-      <div class="divider"><span>oder</span></div>
-
-      <div
-        id="g_id_onload"
-        data-client_id="787643878218-7fi5mq8dee6fb37j5pcs1srsuafitlgl.apps.googleusercontent.com"
-        data-callback="handleCredentialResponse"
-        data-auto_prompt="false"
-      ></div>
-      <div
-        class="g_id_signin"
-        data-type="standard"
-        data-size="large"
-        data-theme="outline"
-        data-text="continue_with"
-        data-shape="pill"
-        data-logo_alignment="left"
-      ></div>
-    </section>
-  </main>
-
-  <main v-else-if="currentPage === 'team-selection'" class="team-selection">
-    <div class="team-cards-container">
-      <h2>Wähle deine Seite</h2>
-      <p class="subtitle">Entscheide dich für einen Lernpfad. Du kannst dies später jederzeit ändern.</p>
-      
-      <div class="teams-wrapper">
-        <button class="team-card blue-team" @click="selectTeam('blue')">
-          <div class="icon-placeholder">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Blue Team Icon Placeholder" />
-          </div>
-          <h3>Blue Team</h3>
-          <p>Verteidige Systeme, analysiere Bedrohungen und sichere Netzwerke ab.</p>
-        </button>
-
-        <button class="team-card red-team" @click="selectTeam('red')">
-          <div class="icon-placeholder">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Red Team Icon Placeholder" />
-          </div>
-          <h3>Red Team</h3>
-          <p>Denke wie ein Angreifer, finde Schwachstellen und teste Systeme.</p>
-        </button>
-      </div>
-    </div>
-  </main>
+  <TeamSelection
+    v-else-if="currentPage === 'team-selection'"
+    @team-selected="selectTeam"
+  />
 
   <main v-else-if="currentPage === 'dashboard'" class="dashboard">
-    <aside class="nav-sidebar">
-      <nav>
-        <button class="nav-btn">
-          <span class="icon">👤</span>
-          Profile
-        </button>
-        <button class="nav-btn">
-          <span class="icon">🛒</span>
-          Store
-        </button>
-        <button class="nav-btn">
-          <span class="icon">🔔</span>
-          Notifications
-        </button>
-      </nav>
-    </aside>
-
-    <section class="main-content">
-      <header class="main-header">
-        <h2>MAIN PAGE</h2>
-      </header>
-
-      <div class="difficulty-grid">
-        <button class="diff-card beginner">
-          <h3>BEGINNER</h3>
-        </button>
-        <button class="diff-card intermediate">
-          <h3>INTERMEDIATE</h3>
-        </button>
-        <button class="diff-card pro">
-          <h3>PRO</h3>
-        </button>
-      </div>
-    </section>
-
-    <aside class="stats-sidebar">
-      <div class="stats-header">
-        <div class="team-badge" :class="selectedTeam">
-          {{ selectedTeam === 'red' ? 'RED TEAM' : 'BLUE TEAM' }}
-        </div>
-        <div class="stat-item">
-          <span class="label">XP</span>
-          <span class="value">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="label">LEVEL</span>
-          <span class="value">1</span>
-        </div>
-        <div class="stat-item">
-          <span class="label">STREAK</span>
-          <span class="value">0</span>
-        </div>
-      </div>
-
-      <div class="quests-section">
-        <h3>QUESTS</h3>
-        <div class="quest-list">
-          <!-- Placeholder for quests -->
-          <div class="quest-item">
-            <div class="quest-icon">🎯</div>
-            <div class="quest-details">
-              <h4>Erstes Login</h4>
-              <p>50 / 50 XP</p>
-            </div>
-          </div>
-          <div class="quest-item locked">
-            <div class="quest-icon">🔒</div>
-            <div class="quest-details">
-              <h4>Absolviere 1 Lektion</h4>
-              <p>0 / 100 XP</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
+    <Dashboard 
+      :selected-team="selectedTeam"
+      @go-to-admin="currentPage = 'admin'"
+      @go-to-profile="currentPage = 'profile'"
+      @go-to-quests="currentPage = 'quests'"
+      @go-to-beginner="currentPage = 'beginner-lesson'"
+      @toggle-theme="toggleTheme"
+    />
   </main>
+
+  <Profile
+    v-else-if="currentPage === 'profile'"
+    :selected-team="selectedTeam"
+    @go-back="currentPage = 'dashboard'"
+  />
+
+  <Quests
+    v-else-if="currentPage === 'quests'"
+    @go-back="currentPage = 'dashboard'"
+  />
+
+  <AdminDashboard
+    v-else-if="currentPage === 'admin'"
+    @go-back="currentPage = 'dashboard'"
+    @toggle-theme="toggleTheme"
+  />
+
+  <BeginnerLesson
+    v-else-if="currentPage === 'beginner-lesson'"
+    @go-back="currentPage = 'dashboard'"
+  />
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import LandingPage from './components/LandingPage.vue'
+import Dashboard from './components/Dashboard.vue'
+import AdminDashboard from './components/AdminDashboard.vue'
+import Profile from './components/Profile.vue'
+import Quests from './components/Quests.vue'
+import TeamSelection from './components/TeamSelection.vue'
+import BeginnerLesson from './components/BeginnerLesson.vue'
+import { authStore } from './authStore.js'
 
 const currentPage = ref('landing')
-const mode = ref('login')
-const email = ref('')
-const password = ref('')
-const displayName = ref('')
-const authError = ref('')
-const selectedTeam = ref('')
+const isDarkMode = ref(localStorage.getItem('theme') !== 'light')
 
-const passwordChecks = computed(() => ({
-  hasLength: password.value.length >= 8,
-  hasSpecial: /[^A-Za-z0-9]/.test(password.value),
-  hasNumber: /\d/.test(password.value),
-  hasUpper: /[A-Z]/.test(password.value),
-}))
+// Team comes from Supabase profile, not local state
+const selectedTeam = computed(() => authStore.profile.team ?? '')
 
-function submitAuth() {
-  authError.value = ''
+// Initialize theme
+watch(isDarkMode, (val) => {
+  const theme = val ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
+}, { immediate: true })
 
-  if (mode.value === 'login') {
-    alert(`Login gestartet fuer ${email.value}`)
-    return
-  }
-
-  if (!displayName.value) {
-    authError.value = 'Bitte gib einen Anzeigenamen ein.'
-    return
-  }
-
-  const validPassword = Object.values(passwordChecks.value).every(Boolean)
-  if (!validPassword) {
-    authError.value = 'Passwort erfuellt noch nicht alle Anforderungen.'
-    return
-  }
-
-  // Go to team selection after successful registration
-  currentPage.value = 'team-selection'
+function toggleTheme() {
+  isDarkMode.value = !isDarkMode.value
 }
 
-function selectTeam(team) {
-  selectedTeam.value = team
+// Navigate based on auth + team status
+function navigateAfterAuth() {
+  if (authStore.isAdmin) {
+    currentPage.value = 'admin'
+    return
+  }
+  if (authStore.user) {
+    // If team already chosen, go straight to dashboard
+    if (authStore.profile.team) {
+      currentPage.value = 'dashboard'
+    } else {
+      currentPage.value = 'team-selection'
+    }
+  } else {
+    currentPage.value = 'landing'
+  }
+}
+
+// Initialize auth on mount
+onMounted(async () => {
+  await authStore.initialize()
+  navigateAfterAuth()
+})
+
+// Watch user session for navigation
+watch(() => authStore.user, (newUser, oldUser) => {
+  if (newUser && !oldUser) {
+    // Fresh login — wait briefly for profile to load, then navigate
+    navigateAfterAuth()
+  } else if (!newUser) {
+    currentPage.value = 'landing'
+  }
+})
+
+// Also watch profile.team in case it loads slightly after user
+watch(() => authStore.profile.team, (team) => {
+  if (currentPage.value === 'team-selection' && team) {
+    currentPage.value = 'dashboard'
+  }
+})
+
+async function selectTeam(team) {
+  await authStore.saveTeam(team)
   currentPage.value = 'dashboard'
 }
 
-window.handleCredentialResponse = (response) => {
-  const payload = decodeJwtResponse(response?.credential)
-  if (!payload) return
-  // Go to team selection after successful Google login
-  currentPage.value = 'team-selection'
-}
-
-function decodeJwtResponse(token) {
-  if (!token) return null
-  try {
-    const payload = token.split('.')[1]
-    return JSON.parse(atob(payload))
-  } catch (error) {
-    console.error('JWT decode failed:', error)
-    return null
+function selectDifficulty(diff) {
+  if (diff === 'intermediate' || diff === 'pro') {
+    alert('Dieser Modus ist gesperrt. Bitte schließe zuerst das Level "Beginner" ab.')
+    return
   }
+  alert('Beginner Modus gestartet!')
 }
-
-onMounted(() => {
-  const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]')
-  if (existingScript) return
-
-  const googleScript = document.createElement('script')
-  googleScript.src = 'https://accounts.google.com/gsi/client'
-  googleScript.async = true
-  googleScript.defer = true
-  document.head.appendChild(googleScript)
-})
 
 onUnmounted(() => {
   delete window.handleCredentialResponse
@@ -279,11 +136,74 @@ onUnmounted(() => {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&family=Space+Grotesk:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap');
 
+:global(:root) {
+  /* DARK THEME (Default) */
+  --bg-main: #0b1220;
+  --bg-card: rgba(10, 20, 36, 0.95);
+  --bg-card-alt: rgba(16, 29, 51, 0.4);
+  --bg-hero: linear-gradient(180deg, rgba(10, 20, 36, 0.95), rgba(10, 18, 31, 0.95));
+  --border-color: #243a5c;
+  --text-primary: #f1f7ff;
+  --text-secondary: #a6bcdb;
+  --accent-teal: #1fb39c;
+  --accent-teal-glow: rgba(31, 179, 156, 0.15);
+  --accent-red: #e2586e;
+  --accent-red-glow: rgba(226, 88, 110, 0.15);
+  --nav-btn-hover: rgba(36, 58, 92, 0.4);
+  --loader-border: #1d3254;
+  --card-shadow: rgba(0, 0, 0, 0.35);
+}
+
+:global([data-theme='light']) {
+  /* LIGHT THEME Overrides */
+  --bg-main: #f0f4f8;
+  --bg-card: #ffffff;
+  --bg-card-alt: #e1e8f0;
+  --bg-hero: linear-gradient(180deg, #ffffff, #f0f4f8);
+  --border-color: #d1dceb;
+  --text-primary: #1a2b4b;
+  --text-secondary: #5a6d8c;
+  --accent-teal: #16a085;
+  --accent-teal-glow: rgba(22, 160, 133, 0.1);
+  --accent-red: #c0392b;
+  --accent-red-glow: rgba(192, 57, 43, 0.1);
+  --nav-btn-hover: #e1e8f0;
+  --loader-border: #d1dceb;
+  --card-shadow: rgba(0, 0, 0, 0.1);
+}
+
 :global(body) {
   margin: 0;
   font-family: 'Work Sans', sans-serif;
-  background: #0b1220;
-  color: #dce9ff;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--loader-border);
+  border-bottom-color: var(--accent-teal);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .landing {
@@ -299,10 +219,10 @@ onUnmounted(() => {
 
 .hero,
 .auth-card {
-  border: 1px solid #243a5c;
+  border: 1px solid var(--border-color);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(10, 20, 36, 0.95), rgba(10, 18, 31, 0.95));
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  background: var(--bg-hero);
+  box-shadow: 0 16px 32px var(--card-shadow);
 }
 
 .hero {
@@ -328,12 +248,12 @@ h1 {
   margin: 0.5rem 0 0.8rem;
   font-size: clamp(1.8rem, 3.6vw, 2.6rem);
   line-height: 1.1;
-  color: #f1f7ff;
+  color: var(--text-primary);
 }
 
 .lead {
   margin: 0;
-  color: #b3c6e2;
+  color: var(--text-secondary);
   max-width: 58ch;
 }
 
@@ -346,12 +266,12 @@ h1 {
 
 .badges span {
   font-family: 'JetBrains Mono', monospace;
-  border: 1px solid #2f5b91;
-  background: rgba(13, 31, 56, 0.65);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card-alt);
   border-radius: 999px;
   padding: 0.25rem 0.6rem;
   font-size: 0.8rem;
-  color: #90bff5;
+  color: var(--accent-teal);
 }
 
 .benefits {
@@ -546,33 +466,73 @@ h2 {
 
 .team-cards-container h2 {
   font-family: 'Space Grotesk', 'Work Sans', sans-serif;
-  font-size: clamp(2rem, 4vw, 3rem);
-  margin: 0 0 0.5rem;
-  color: #f1f7ff;
+  font-size: clamp(2.2rem, 5vw, 3.5rem);
+  margin: 0 0 0.75rem;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .team-cards-container .subtitle {
-  color: #a6bcdb;
-  margin: 0 0 3.5rem;
-  font-size: 1.15rem;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  max-width: 60ch;
+  margin: 0 auto 4rem;
+.team-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 28px;
+  padding: 3.5rem 2rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .teams-wrapper {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2.5rem;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-@media (max-width: 768px) {
-  .teams-wrapper {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
+.team-card:hover {
+  transform: translateY(-12px) scale(1.02);
+  border-color: var(--accent-teal);
+  box-shadow: 0 20px 40px var(--card-shadow);
+}
+
+.team-card.red-team:hover {
+  border-color: var(--accent-red);
+  box-shadow: 0 20px 40px var(--accent-red-glow);
+}
+
+.team-card.blue-team:hover {
+  border-color: var(--accent-teal);
+  box-shadow: 0 20px 40px var(--accent-teal-glow);
+}
+
+.icon-placeholder {
+  width: 80px;
+  height: 80px;
+  background: var(--bg-card-alt);
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
 }
 
 .team-card {
-  background: linear-gradient(180deg, rgba(16, 29, 51, 0.4), rgba(10, 18, 31, 0.8));
-  border: 1px solid #243a5c;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 28px;
   padding: 3.5rem 2.5rem;
   cursor: pointer;
@@ -584,21 +544,21 @@ h2 {
   gap: 1.5rem;
   font: inherit;
   color: inherit;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px var(--card-shadow);
 }
 
 .icon-placeholder {
   width: 140px;
   height: 140px;
-  background-color: #050a14;
+  background-color: var(--bg-main);
   border-radius: 24px;
-  border: 2px dashed #2f496f;
+  border: 2px dashed var(--border-color);
   transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
 }
 
 .icon-placeholder img {
@@ -613,12 +573,12 @@ h2 {
   font-family: 'Space Grotesk', 'Work Sans', sans-serif;
   font-size: 2rem;
   margin: 0;
-  color: #f1f7ff;
+  color: var(--text-primary);
   transition: color 0.4s ease;
 }
 
 .team-card p {
-  color: #95afcf;
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.6;
   font-size: 1.05rem;
@@ -632,14 +592,14 @@ h2 {
 
 .blue-team:hover {
   transform: translateY(-8px);
-  border-color: #1fb39c;
-  box-shadow: 0 20px 50px rgba(31, 179, 156, 0.15), 0 0 0 1px rgba(31, 179, 156, 0.5);
-  background: linear-gradient(180deg, rgba(19, 59, 74, 0.8), rgba(10, 18, 31, 0.95));
+  border-color: var(--accent-teal);
+  box-shadow: 0 20px 50px var(--accent-teal-glow), 0 0 0 1px var(--accent-teal);
+  background: var(--bg-card-alt);
 }
 
 .blue-team:hover .icon-placeholder {
-  border-color: #1fb39c;
-  box-shadow: 0 0 30px rgba(31, 179, 156, 0.3);
+  border-color: var(--accent-teal);
+  box-shadow: 0 0 30px var(--accent-teal-glow);
   transform: scale(1.05);
 }
 
@@ -649,8 +609,8 @@ h2 {
 }
 
 .blue-team:hover h3 {
-  color: #53c7b5;
-  text-shadow: 0 0 20px rgba(31, 179, 156, 0.4);
+  color: var(--accent-teal);
+  text-shadow: 0 0 20px var(--accent-teal-glow);
 }
 
 .blue-team:hover p {
@@ -668,14 +628,14 @@ h2 {
 
 .red-team:hover {
   transform: translateY(-8px);
-  border-color: #e2586e;
-  box-shadow: 0 20px 50px rgba(226, 88, 110, 0.15), 0 0 0 1px rgba(226, 88, 110, 0.5);
-  background: linear-gradient(180deg, rgba(74, 25, 36, 0.8), rgba(10, 18, 31, 0.95));
+  border-color: var(--accent-red);
+  box-shadow: 0 20px 50px var(--accent-red-glow), 0 0 0 1px var(--accent-red);
+  background: var(--bg-card-alt);
 }
 
 .red-team:hover .icon-placeholder {
-  border-color: #e2586e;
-  box-shadow: 0 0 30px rgba(226, 88, 110, 0.3);
+  border-color: var(--accent-red);
+  box-shadow: 0 0 30px var(--accent-red-glow);
   transform: scale(1.05);
 }
 
@@ -766,7 +726,8 @@ h2 {
 .main-header h2 {
   font-family: 'Work Sans', sans-serif;
   font-size: 1.5rem;
-  color: #7e97bc;
+  color: #ffffff;
+  text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin: 0 0 2rem 0;
@@ -800,19 +761,32 @@ h2 {
   transition: transform 0.3s ease;
 }
 
-.diff-card:hover {
+.diff-card:hover:not(.locked) {
   transform: translateY(-4px);
   background: linear-gradient(180deg, rgba(23, 42, 71, 0.8), rgba(10, 18, 31, 0.95));
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 
-.diff-card:hover h3 {
+.diff-card:hover:not(.locked) h3 {
   transform: scale(1.05);
 }
 
-.diff-card.beginner:hover { border-color: #1fb39c; box-shadow: 0 8px 24px rgba(31, 179, 156, 0.15); }
-.diff-card.intermediate:hover { border-color: #f39c12; box-shadow: 0 8px 24px rgba(243, 156, 18, 0.15); }
-.diff-card.pro:hover { border-color: #e2586e; box-shadow: 0 8px 24px rgba(226, 88, 110, 0.15); }
+.diff-card.beginner:hover:not(.locked) { border-color: #1fb39c; box-shadow: 0 8px 24px rgba(31, 179, 156, 0.15); }
+.diff-card.intermediate:hover:not(.locked) { border-color: #f39c12; box-shadow: 0 8px 24px rgba(243, 156, 18, 0.15); }
+.diff-card.pro:hover:not(.locked) { border-color: #e2586e; box-shadow: 0 8px 24px rgba(226, 88, 110, 0.15); }
+
+.diff-card.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lock-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  filter: grayscale(1);
+}
 
 /* Dashboard: Stats Sidebar */
 .stats-sidebar {
@@ -925,6 +899,31 @@ h2 {
   border: 1px solid #243a5c;
 }
 
+.view-quests-btn {
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 0.8rem;
+  background: transparent;
+  border: 1px solid #3b5a8e;
+  border-radius: 12px;
+  color: #a6bcdb;
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-quests-btn:hover {
+  background: rgba(36, 58, 92, 0.4);
+  color: #f1f7ff;
+  border-color: #53c7b5;
+}
+
+.view-quests-btn:active {
+  transform: translateY(2px);
+}
+
 .quest-details h4 {
   margin: 0 0 0.25rem 0;
   color: #e2edff;
@@ -938,40 +937,6 @@ h2 {
   font-size: 0.85rem;
 }
 
-@media (max-width: 1200px) {
-  .dashboard {
-    grid-template-columns: 200px 1fr;
-  }
-  .stats-sidebar {
-    grid-column: 1 / -1;
-    border-left: none;
-    border-top: 1px solid #243a5c;
-    padding-left: 0;
-    padding-top: 2rem;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  .quests-section {
-    flex: 1;
-    min-width: 300px;
-  }
-}
-
-@media (max-width: 900px) {
-  .dashboard {
-    grid-template-columns: 1fr;
-  }
-  .nav-sidebar {
-    border-right: none;
-    border-bottom: 1px solid #243a5c;
-    padding-right: 0;
-    padding-bottom: 1.5rem;
-  }
-  .nav-sidebar nav {
-    flex-direction: row;
-    justify-content: center;
-    position: static;
-  }
   .difficulty-grid {
     grid-template-columns: 1fr;
   }
