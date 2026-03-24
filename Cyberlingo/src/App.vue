@@ -18,7 +18,7 @@
       @go-to-admin="currentPage = 'admin'"
       @go-to-profile="currentPage = 'profile'"
       @go-to-quests="currentPage = 'quests'"
-      @go-to-beginner="currentPage = 'beginner-lesson'"
+      @go-to-lesson="(lvl) => { currentLevel = lvl; currentPage = 'lesson' }"
       @toggle-theme="toggleTheme"
     />
   </main>
@@ -40,8 +40,9 @@
     @toggle-theme="toggleTheme"
   />
 
-  <BeginnerLesson
-    v-else-if="currentPage === 'beginner-lesson'"
+  <LessonPage
+    v-else-if="currentPage === 'lesson'"
+    :level="currentLevel"
     @go-back="currentPage = 'dashboard'"
   />
 </template>
@@ -54,10 +55,11 @@ import AdminDashboard from './components/AdminDashboard.vue'
 import Profile from './components/Profile.vue'
 import Quests from './components/Quests.vue'
 import TeamSelection from './components/TeamSelection.vue'
-import BeginnerLesson from './components/BeginnerLesson.vue'
+import LessonPage from './components/LessonPage.vue'
 import { authStore } from './authStore.js'
 
 const currentPage = ref('landing')
+const currentLevel = ref('beginner')
 const isDarkMode = ref(localStorage.getItem('theme') !== 'light')
 
 // Team comes from Supabase profile, not local state
@@ -118,14 +120,6 @@ watch(() => authStore.profile.team, (team) => {
 async function selectTeam(team) {
   await authStore.saveTeam(team)
   currentPage.value = 'dashboard'
-}
-
-function selectDifficulty(diff) {
-  if (diff === 'intermediate' || diff === 'pro') {
-    alert('Dieser Modus ist gesperrt. Bitte schließe zuerst das Level "Beginner" ab.')
-    return
-  }
-  alert('Beginner Modus gestartet!')
 }
 
 onUnmounted(() => {

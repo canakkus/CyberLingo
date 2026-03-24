@@ -3,8 +3,8 @@
     <div class="lesson-container">
       <header class="lesson-header">
         <button class="back-btn" @click="$emit('go-back')">← Zurück</button>
-        <h1>🛡️ Blue Team – Basic Level</h1>
-        <span class="level-badge">BASIC</span>
+        <h1>{{ lessonDataTitle }}</h1>
+        <span class="level-badge">{{ levelBadgeText }}</span>
       </header>
 
       <!-- 3-column Topics Row -->
@@ -132,27 +132,27 @@
               <h3>{{ activeQuestions[currentQ].question }}</h3>
               <div class="options">
                 <button
-                  v-for="opt in activeQuestions[currentQ].options"
-                  :key="opt.key"
+                  v-for="(opt, oIndex) in activeQuestions[currentQ].options"
+                  :key="oIndex"
                   class="option-btn"
                   :class="{
-                    selected: selectedAns === opt.key,
-                    correct: answered && opt.key === activeQuestions[currentQ].correct,
-                    wrong: answered && selectedAns === opt.key && opt.key !== activeQuestions[currentQ].correct
+                    selected: selectedAns === oIndex,
+                    correct: answered && oIndex === activeQuestions[currentQ].correctIndex,
+                    wrong: answered && selectedAns === oIndex && oIndex !== activeQuestions[currentQ].correctIndex
                   }"
                   :disabled="answered"
-                  @click="selectAnswer(opt.key)"
+                  @click="selectAnswer(oIndex)"
                 >
-                  <span class="opt-key">{{ opt.key.toUpperCase() }}</span>
-                  <span class="opt-text">{{ opt.text }}</span>
+                  <span class="opt-key">{{ String.fromCharCode(65 + oIndex) }}</span>
+                  <span class="opt-text">{{ opt }}</span>
                 </button>
               </div>
               <Transition name="fade">
                 <div v-if="answered" class="explanation">
-                  <p :class="selectedAns === activeQuestions[currentQ].correct ? 'correct-text' : 'wrong-text'">
-                    {{ selectedAns === activeQuestions[currentQ].correct ? '✅ Richtig!' : '❌ Falsch!' }}
+                  <p :class="selectedAns === activeQuestions[currentQ].correctIndex ? 'correct-text' : 'wrong-text'">
+                    {{ selectedAns === activeQuestions[currentQ].correctIndex ? '✅ Richtig!' : '❌ Falsch!' }}
                   </p>
-                  <p class="expl-text">{{ activeQuestions[currentQ].explanation }}</p>
+                  <p v-if="activeQuestions[currentQ].explanation" class="expl-text">{{ activeQuestions[currentQ].explanation }}</p>
                   <button class="nav-btn-small primary" @click="nextQ">Weiter →</button>
                 </div>
               </Transition>
@@ -165,7 +165,7 @@
               <div class="open-hint">
                 <details>
                   <summary>💡 Beispiel-Antwort zeigen</summary>
-                  <p>{{ activeQuestions[currentQ].hint }}</p>
+                  <p>{{ activeQuestions[currentQ].expected || activeQuestions[currentQ].hint }}</p>
                 </details>
               </div>
               <button class="nav-btn-small primary" @click="nextQ">
@@ -189,10 +189,27 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { authStore } from '../authStore'
+import { ref, computed, watch, defineProps, defineEmits } from 'vue'
+import { authStore } from '../authStore.js'
+import { lessonsData } from '../data/lessonData.js'
 
+const props = defineProps({
+  level: {
+    type: String,
+    required: true
+  }
+})
 const emit = defineEmits(['go-back'])
+
+const currentTeam = computed(() => authStore.profile.team || 'blue')
+const lessonDataObj = computed(() => {
+  if (!lessonsData[currentTeam.value]) return lessonsData.blue.beginner
+  return lessonsData[currentTeam.value][props.level] || lessonsData.blue.beginner
+})
+
+const lessonDataTitle = computed(() => `🛡️ ${lessonDataObj.value.title}`)
+const levelBadgeText = computed(() => props.level.toUpperCase())
+const topics = computed(() => lessonDataObj.value.topics)
 
 // --- State ---
 const expandedTopic = ref(null)
@@ -247,11 +264,11 @@ function resetQuiz() {
   openAnswers.value = {}
 }
 
-function selectAnswer(key) {
+function selectAnswer(index) {
   if (answered.value) return
-  selectedAns.value = key
+  selectedAns.value = index
   answered.value = true
-  if (key === activeQuestions.value[currentQ.value].correct) correctCount.value++
+  if (index === activeQuestions.value[currentQ.value].correctIndex) correctCount.value++
 }
 
 function nextQ() {
@@ -267,8 +284,16 @@ function nextQ() {
 async function claimXP() {
   const xpGain = activeQuiz.value === 'final' ? 300 : 100
   const newXp = authStore.userStats.xp + xpGain
-  await authStore.saveUserStats({ xp: newXp, level: authStore.userStats.level, streak: authStore.userStats.streak })
+  
+  let newLevel = authStore.userStats.level
+  if (activeQuiz.value === 'final') {
+    if (props.level === 'beginner' && newLevel < 2) newLevel = 2
+    if (props.level === 'advanced' && newLevel < 3) newLevel = 3
+  }
+  
+  await authStore.saveUserStats({ xp: newXp, level: newLevel, streak: authStore.userStats.streak })
   authStore.userStats.xp = newXp
+  authStore.userStats.level = newLevel
 
   if (activeQuiz.value === 'final') {
     finalQuizDone.value = true
@@ -288,296 +313,18 @@ watch(finalUnlocked, (val) => {
 })
 
 const activeQuizTitle = computed(() => {
-  if (activeQuiz.value === 'final') return 'Final Quiz – Blue Team Basic'
-  if (activeQuiz.value !== null) return topics[activeQuiz.value].title
+  if (activeQuiz.value === 'final') return `Final Quiz – ${lessonDataObj.value.title}`
+  if (activeQuiz.value !== null) return topics.value[activeQuiz.value].title
   return ''
 })
 
 const activeQuestions = computed(() => {
-  if (activeQuiz.value === 'final') return finalQuizQuestions
-  if (activeQuiz.value !== null) return topics[activeQuiz.value].questions
+  if (activeQuiz.value === 'final') return lessonDataObj.value.finalQuiz
+  if (activeQuiz.value !== null) return topics.value[activeQuiz.value].quiz
   return []
 })
 
-// --- Topic Data ---
-const topics = [
-  {
-    icon: '🔐',
-    title: 'IT-Sicherheit & CIA-Triade',
-    sections: [
-      {
-        title: 'Was ist IT-Sicherheit?',
-        content: `<p><strong>IT-Sicherheit</strong> schützt digitale Assets vor unbefugtem Zugriff, Manipulation oder Zerstörung. Sie umfasst Hardware, Software, Netzwerke und Daten und berücksichtigt Bedrohungen wie Phishing, Ransomware oder DDoS-Angriffe.</p>
-        <ul>
-          <li>Wichtige Maßnahmen: Updates, starke Passwörter, Backups und <strong>Multi-Faktor-Authentifizierung (MFA)</strong></li>
-          <li>IT-Sicherheit schützt IoT-Systeme, Netzwerke und sensible Daten</li>
-          <li>Basiert auf Risikoanalyse, technischen und organisatorischen Maßnahmen</li>
-        </ul>
-        <div class="htl-box"><span class="htl-label">🎓 HTL-Praxis:</span> Für Projekte wie den Cyber-Threat-Simulator ist IT-Sicherheit essenziell, um sensible Daten in IoT-Systemen oder Netzwerken zu schützen.</div>`
-      },
-      {
-        title: 'CIA-Triade: Vertraulichkeit & Integrität',
-        content: `<p>Die <strong>CIA-Triade</strong> (Confidentiality, Integrity, Availability) ist das zentrale Modell der Informationssicherheit.</p>
-        <ul>
-          <li><strong>Vertraulichkeit (Confidentiality)</strong>: Nur autorisierte Personen können auf Daten zugreifen. Maßnahmen: Verschlüsselung (z. B. AES), Zugriffssteuerung, VPNs.</li>
-          <li><strong>Integrität (Integrity)</strong>: Daten bleiben vollständig, korrekt und unverändert. Schutz durch Hash-Funktionen, digitale Signaturen oder Checksums.</li>
-        </ul>
-        <div class="tool-box"><span class="tool-label">🔧 Tool-Tipp:</span> <strong>Wireshark</strong> – Analysiere Netzwerkverkehr und prüfe, ob Daten unverschlüsselt übertragen werden.</div>`
-      },
-      {
-        title: 'CIA-Triade: Verfügbarkeit & Erweiterte Aspekte',
-        content: `<ul>
-          <li><strong>Verfügbarkeit (Availability)</strong>: Systeme und Daten sind jederzeit für Berechtigte zugänglich. Gegenmaßnahmen: Redundanz, DDoS-Schutz, Backups.</li>
-        </ul>
-        <p><strong>Erweiterte Aspekte:</strong> Manchmal wird die Triade um <em>Authentizität</em> erweitert. In der Praxis analysierst du Risiken (Bedrohungen × Vulnerabilities × Impact) und implementierst Schichten:</p>
-        <ul>
-          <li><strong>Physisch</strong>: Zugangssicherung</li>
-          <li><strong>Technisch</strong>: Firewalls, IDS/IPS</li>
-          <li><strong>Organisatorisch</strong>: Awareness-Trainings</li>
-        </ul>
-        <div class="htl-box"><span class="htl-label">🎓 HTL-Praxis:</span> Starte mit BSI-Grundschutz-Katalogen für praktische Umsetzung in Schulprojekten.</div>`
-      }
-    ],
-    questions: [
-      {
-        question: 'Was steht "C" in der CIA-Triade?',
-        options: [{ key: 'a', text: 'Compliance' }, { key: 'b', text: 'Control' }, { key: 'c', text: 'Confidentiality (Vertraulichkeit)' }, { key: 'd', text: 'Communication' }],
-        correct: 'c',
-        explanation: 'Confidentiality (Vertraulichkeit) schützt vor unbefugtem Zugriff auf Daten.'
-      },
-      {
-        question: 'Welche Maßnahme schützt primär die Integrität (Integrity) von Daten?',
-        options: [{ key: 'a', text: 'Firewalls' }, { key: 'b', text: 'Hash-Funktionen oder digitale Signaturen' }, { key: 'c', text: 'Backups' }, { key: 'd', text: 'VPNs' }],
-        correct: 'b',
-        explanation: 'Hash-Funktionen und digitale Signaturen erkennen Manipulationen an Daten.'
-      },
-      {
-        question: 'Was bedeutet Verfügbarkeit (Availability) in der CIA-Triade?',
-        options: [{ key: 'a', text: 'Daten sind vor Manipulation geschützt' }, { key: 'b', text: 'Nur Berechtigte haben Zugriff' }, { key: 'c', text: 'Daten und Systeme sind jederzeit zugänglich' }, { key: 'd', text: 'Daten werden verschlüsselt' }],
-        correct: 'c',
-        explanation: 'Verfügbarkeit bedeutet, dass Systeme und Daten trotz Ausfällen erreichbar bleiben.'
-      },
-      {
-        question: 'Welche Bedrohung verletzt hauptsächlich die Vertraulichkeit?',
-        options: [{ key: 'a', text: 'Phishing oder unbefugter Zugriff' }, { key: 'b', text: 'DDoS-Angriff' }, { key: 'c', text: 'Ransomware' }, { key: 'd', text: 'Hardware-Ausfall' }],
-        correct: 'a',
-        explanation: 'Phishing und unbefugter Zugriff ermöglichen Datenklau und verletzen die Vertraulichkeit.'
-      },
-      {
-        question: 'Welches IT-Sicherheitsprinzip wird durch starke Passwörter und MFA unterstützt?',
-        options: [{ key: 'a', text: 'Integrität' }, { key: 'b', text: 'Vertraulichkeit' }, { key: 'c', text: 'Verfügbarkeit' }, { key: 'd', text: 'Authentizität' }],
-        correct: 'b',
-        explanation: 'Starke Passwörter und MFA schützen die Vertraulichkeit, indem sie unbefugten Login verhindern.'
-      }
-    ]
-  },
-  {
-    icon: '🔑',
-    title: 'Authentifizierung & Account-Sicherheit',
-    sections: [
-      {
-        title: 'Authentifizierung – Grundlagen',
-        content: `<p><strong>Authentifizierung</strong> überprüft die Identität von Nutzern durch:</p>
-        <ul>
-          <li><strong>Wissen</strong>: Etwas das du weißt (Passwort, PIN)</li>
-          <li><strong>Besitz</strong>: Etwas das du hast (Smartphone, Hardware-Token)</li>
-          <li><strong>Eigenschaft</strong>: Etwas das du bist (Fingerabdruck, Gesicht)</li>
-        </ul>
-        <p>Typen: Single-Factor (nur Passwort, unsicher), <strong>Two-Factor (2FA)</strong> oder <strong>Multi-Factor (MFA)</strong> – empfohlen. Protokolle: SAML für SSO, FIDO2 für passwortlos, Kerberos in Active Directory.</p>
-        <div class="htl-box"><span class="htl-label">🎓 HTL-Praxis:</span> Mit einem Raspberry Pi kannst du einen TOTP-Server aufsetzen und MFA selbst implementieren.</div>`
-      },
-      {
-        title: 'Account-Sicherheit & Best Practices',
-        content: `<p><strong>Account-Sicherheit</strong> umfasst:</p>
-        <ul>
-          <li><strong>Principle of Least Privilege</strong>: Minimale Rechte für jeden Account</li>
-          <li>Regelmäßige Passwort-Rotation und Deaktivierung inaktiver Konten</li>
-          <li>Häufige Risiken: Credential Stuffing, Phishing, schwache Service-Accounts</li>
-        </ul>
-        <p><strong>Praktische Maßnahmen:</strong></p>
-        <ul>
-          <li>Passwörter: Mind. 12 Zeichen, komplex (Groß-/Kleinbuchstaben, Zahlen, Symbole), keine Wiederverwendung</li>
-          <li>MFA aktivieren: App (z.B. Authenticator), Hardware-Token oder SMS – blockt 99% der Account-Hacks</li>
-          <li>Audit Logs prüfen, Anomalien erkennen (z.B. mit ADAudit Plus)</li>
-        </ul>
-        <div class="htl-box"><span class="htl-label">🎓 HTL-Praxis:</span> MFA für Hyper-V-VMs oder GitHub-Accounts einrichten.</div>`
-      },
-      {
-        title: 'Authentifizierung vs. Autorisierung',
-        content: `<p>Wichtiger Unterschied:</p>
-        <ul>
-          <li><strong>Authentifizierung</strong>: Prüft "Wer bist du?" – verifiziert die Identität</li>
-          <li><strong>Autorisierung</strong>: Klärt "Was darfst du?" – legt Zugriffsrechte fest</li>
-        </ul>
-        <p>Ohne starke Authentifizierung nützt auch die beste Autorisierung nichts. MFA ist heute der wichtigste Schutz gegen Credential-Diebstahl.</p>
-        <div class="tool-box"><span class="tool-label">🔧 Tool-Tipp:</span> <strong>SAML</strong> ermöglicht Single Sign-On (SSO) – zentraler Login über einen Identity Provider (IdP).</div>`
-      }
-    ],
-    questions: [
-      {
-        question: 'Was ist der Hauptzweck der Authentifizierung?',
-        options: [{ key: 'a', text: 'Zugriffsrechte verteilen' }, { key: 'b', text: 'Identität eines Nutzers prüfen' }, { key: 'c', text: 'Daten verschlüsseln' }, { key: 'd', text: 'Backups erstellen' }],
-        correct: 'b',
-        explanation: 'Authentifizierung prüft "Wer bist du?" und verifiziert die Identität – im Gegensatz zur Autorisierung.'
-      },
-      {
-        question: 'Welcher Faktor gehört zur MFA (Multi-Factor-Authentifizierung)?',
-        options: [{ key: 'a', text: 'Nur Passwort' }, { key: 'b', text: 'Smartphone-App + Passwort' }, { key: 'c', text: 'Firewall' }, { key: 'd', text: 'Antivirus' }],
-        correct: 'b',
-        explanation: 'MFA kombiniert Besitz (Smartphone-App) + Wissen (Passwort) für sicheren Zugang.'
-      },
-      {
-        question: 'Was besagt das Principle of Least Privilege?',
-        options: [{ key: 'a', text: 'Konten nur minimale Rechte geben' }, { key: 'b', text: 'Alle Rechte für Admins' }, { key: 'c', text: 'Passwörter teilen' }, { key: 'd', text: 'Keine Logs führen' }],
-        correct: 'a',
-        explanation: 'Minimale Rechte reduzieren das Schadenspotenzial bei einer Kompromittierung.'
-      },
-      {
-        question: 'Welche Bedrohung zielt auf Account-Sicherheit ab?',
-        options: [{ key: 'a', text: 'Virus-Scan' }, { key: 'b', text: 'Phishing für Passwörter' }, { key: 'c', text: 'Hardware-Update' }, { key: 'd', text: 'Netzwerk-Switch' }],
-        correct: 'b',
-        explanation: 'Phishing ist der häufigste Angriff auf Credentials und zielt direkt auf Account-Sicherheit ab.'
-      },
-      {
-        question: 'Welches Protokoll wird für SSO-Authentifizierung genutzt?',
-        options: [{ key: 'a', text: 'HTTP' }, { key: 'b', text: 'SAML' }, { key: 'c', text: 'FTP' }, { key: 'd', text: 'SMTP' }],
-        correct: 'b',
-        explanation: 'SAML (Security Assertion Markup Language) ermöglicht zentralen Login über einen Identity Provider.'
-      }
-    ]
-  },
-  {
-    icon: '🌐',
-    title: 'Netzwerksicherheit Grundlagen',
-    sections: [
-      {
-        title: 'Grundlagen & Architekturen',
-        content: `<p><strong>Netzwerksicherheit</strong> schützt Netzwerke vor unbefugtem Zugriff, Angriffen und Ausfällen. Häufige Bedrohungen: DDoS, Man-in-the-Middle, Port-Scans.</p>
-        <p><strong>Netzwerk-Zonen:</strong></p>
-        <ul>
-          <li><strong>DMZ</strong> (Demilitarisierte Zone): für öffentliche Services</li>
-          <li><strong>Internal-Netz</strong>: geschützt, nur intern erreichbar</li>
-          <li><strong>VLANs</strong>: Segmentierung – trennt Traffic logisch (z.B. IoT von Admin-Netz)</li>
-        </ul>
-        <p>Subnetting (z.B. 192.168.1.0/24) minimiert Broadcast-Domains und Angriffsflächen.</p>
-        <div class="htl-box"><span class="htl-label">🎓 HTL-Praxis:</span> Hyper-V mit VLAN-Tags für simulierte Netze nutzen.</div>`
-      },
-      {
-        title: 'Kerntechnologien: Firewalls, IDS/IPS, VPN',
-        content: `<ul>
-          <li><strong>Firewalls</strong>: Stateful Inspection (prüft Sessions) vs. Next-Gen (App-Control, IPS). Regeln: Allow/deny nach IP, Port, Protokoll.</li>
-          <li><strong>IDS/IPS</strong>: Intrusion Detection (passiv warnt), Prevention (blockt aktiv). Signaturen vs. Anomalie-basiert (z.B. Snort).</li>
-          <li><strong>VPNs</strong>: IPsec (Tunnel) oder OpenVPN für sichere Remote-Zugriffe. Schützt vor Sniffing in öffentlichen WLANs.</li>
-          <li><strong>NAC</strong> (Network Access Control): Prüft Geräte vor Einlass (802.1X mit RADIUS).</li>
-        </ul>
-        <div class="tool-box"><span class="tool-label">🔧 Tool-Tipp:</span> <strong>pfSense</strong> – kostenlose Firewall-VM; <strong>Wireshark</strong> – VPN-Tunnel analysieren.</div>`
-      },
-      {
-        title: 'Bedrohungen & Zero-Trust',
-        content: `<ul>
-          <li><strong>DDoS</strong>: Volumen-Angriffe überfluten Bandbreite – Mitigation via Rate-Limiting, Cloud-Scrubber (Cloudflare).</li>
-          <li><strong>Man-in-the-Middle (MitM)</strong>: ARP-Poisoning – Schutz: Dynamic ARP Inspection, HSTS/HTTPS.</li>
-          <li><strong>WLAN-Sicherheit</strong>: WPA3 > WPA2, EAP für Enterprise, WPS deaktivieren.</li>
-        </ul>
-        <p><strong>Zero-Trust</strong>: "Vertraue niemandem, verifiziere alles." Jeder Zugriff wird geprüft – egal ob innen oder außen. Paradigmenwechsel weg vom alten Perimeter-Modell.</p>
-        <div class="htl-box"><span class="htl-label">🎓 HTL-Praxis:</span> Starte mit Wireshark für Traffic-Analyse, Port-Knocking für SSH (knockd auf Linux), Monitoring mit Zabbix oder ELK-Stack.</div>`
-      }
-    ],
-    questions: [
-      {
-        question: 'Was ist der Zweck einer Firewall?',
-        options: [{ key: 'a', text: 'Daten verschlüsseln' }, { key: 'b', text: 'Traffic nach Regeln filtern' }, { key: 'c', text: 'Backups machen' }, { key: 'd', text: 'User authentifizieren' }],
-        correct: 'b',
-        explanation: 'Eine Firewall filtert Netzwerkverkehr nach definierten Regeln und blockt unerwünschten Zu- oder Abfluss.'
-      },
-      {
-        question: 'Welches Protokoll schützt VPN-Verbindungen?',
-        options: [{ key: 'a', text: 'HTTP' }, { key: 'b', text: 'IPsec' }, { key: 'c', text: 'FTP' }, { key: 'd', text: 'SNMP' }],
-        correct: 'b',
-        explanation: 'IPsec verschlüsselt Tunnel-Daten und schützt VPN-Verbindungen vor Sniffing.'
-      },
-      {
-        question: 'Was bewirkt VLAN-Segmentierung?',
-        options: [{ key: 'a', text: 'Trennt Netzwerk-Traffic logisch' }, { key: 'b', text: 'Erhöht Bandbreite' }, { key: 'c', text: 'Verschlüsselt Daten' }, { key: 'd', text: 'Speichert Logs' }],
-        correct: 'a',
-        explanation: 'VLANs trennen Traffic logisch, reduzieren Broadcasts und verkleinern die Angriffsfläche.'
-      },
-      {
-        question: 'Welcher Angriff zielt auf Verfügbarkeit ab?',
-        options: [{ key: 'a', text: 'Phishing' }, { key: 'b', text: 'DDoS' }, { key: 'c', text: 'SQL-Injection' }, { key: 'd', text: 'Buffer Overflow' }],
-        correct: 'b',
-        explanation: 'DDoS (Distributed Denial of Service) überflutet Ressourcen und macht sie für Berechtigte unzugänglich.'
-      },
-      {
-        question: 'Was ist Zero-Trust?',
-        options: [{ key: 'a', text: 'Alle Netzwerkgeräte voll vertrauen' }, { key: 'b', text: 'Perimeter-Verteidigung maximieren' }, { key: 'c', text: 'Jede Anfrage explizit autorisieren' }, { key: 'd', text: 'Offene Ports erlauben' }],
-        correct: 'c',
-        explanation: 'Zero-Trust bedeutet kein implizites Vertrauen – auch interne Zugriffe werden stets verifiziert.'
-      }
-    ]
-  }
-]
-
-// --- Final Quiz ---
-const finalQuizQuestions = [
-  {
-    question: 'Was steht "I" in der CIA-Triade?',
-    options: [{ key: 'a', text: 'Integrity (Integrität)' }, { key: 'b', text: 'Identification' }, { key: 'c', text: 'Internet' }, { key: 'd', text: 'Installation' }],
-    correct: 'a',
-    explanation: 'Integrity (Integrität) schützt vor Manipulation von Daten.'
-  },
-  {
-    question: 'Welche Maßnahme unterstützt Verfügbarkeit?',
-    options: [{ key: 'a', text: 'Verschlüsselung' }, { key: 'b', text: 'Backups' }, { key: 'c', text: 'Hashing' }, { key: 'd', text: 'Passwortrichtlinie' }],
-    correct: 'b',
-    explanation: 'Backups ermöglichen die Wiederherstellung nach Ausfällen und sichern die Verfügbarkeit.'
-  },
-  {
-    question: 'Was ist MFA?',
-    options: [{ key: 'a', text: 'Multi-Firewall-Auth' }, { key: 'b', text: 'Multi-Factor-Authentifizierung' }, { key: 'c', text: 'Mainframe-Access' }, { key: 'd', text: 'Manual File Audit' }],
-    correct: 'b',
-    explanation: 'Multi-Factor-Authentifizierung kombiniert ≥2 Faktoren für sicheren Zugang.'
-  },
-  {
-    question: 'Best Practice für Passwörter?',
-    options: [{ key: 'a', text: 'Kurze, einfache Wörter' }, { key: 'b', text: 'Mind. 12 Zeichen, komplex' }, { key: 'c', text: 'Wiederverwenden' }, { key: 'd', text: 'Teilen mit Kollegen' }],
-    correct: 'b',
-    explanation: 'Mindestens 12 komplexe Zeichen erhöhen die Brute-Force-Resistenz erheblich.'
-  },
-  {
-    question: 'Zweck einer Firewall?',
-    options: [{ key: 'a', text: 'Daten speichern' }, { key: 'b', text: 'Traffic filtern' }, { key: 'c', text: 'User trainieren' }, { key: 'd', text: 'Hardware reparieren' }],
-    correct: 'b',
-    explanation: 'Firewalls filtern Netzwerkverkehr nach Regeln (allow/deny).'
-  },
-  {
-    question: 'Was ist Zero-Trust?',
-    options: [{ key: 'a', text: 'Alles vertrauen' }, { key: 'b', text: 'Jede Anfrage verifizieren' }, { key: 'c', text: 'Offene Ports' }, { key: 'd', text: 'Single-Factor' }],
-    correct: 'b',
-    explanation: 'Zero-Trust bedeutet kein implizites Vertrauen – jede Anfrage wird explizit autorisiert.'
-  },
-  {
-    question: 'Principle of Least Privilege bedeutet?',
-    options: [{ key: 'a', text: 'Minimale Rechte vergeben' }, { key: 'b', text: 'Alle Rechte für alle' }, { key: 'c', text: 'Keine Logs' }, { key: 'd', text: 'Standard-Passwörter' }],
-    correct: 'a',
-    explanation: 'Minimale Rechte reduzieren den Schaden bei einer Kompromittierung.'
-  },
-  {
-    type: 'open',
-    question: 'Nenne die 3 Säulen der CIA-Triade und je eine Beispiel-Maßnahme pro Säule.',
-    hint: 'Confidentiality (Verschlüsselung), Integrity (Hashing/digitale Signaturen), Availability (Redundanz/Backups).'
-  },
-  {
-    type: 'open',
-    question: 'Warum ist MFA wichtiger als nur Passwörter?',
-    hint: 'MFA erfordert einen zusätzlichen Faktor (z.B. App). Selbst wenn das Passwort geleakt wird, fehlt dem Angreifer der zweite Faktor – 99% der Angriffe werden geblockt.'
-  },
-  {
-    type: 'open',
-    question: 'Erkläre kurz den Unterschied zwischen IDS und IPS.',
-    hint: 'IDS (Intrusion Detection System) erkennt und warnt vor Angriffen passiv. IPS (Intrusion Prevention System) blockt Angriffe aktiv, z.B. durch Traffic-Drop.'
-  }
-]
+// Dynamic Data Replaced
 </script>
 
 <style scoped>

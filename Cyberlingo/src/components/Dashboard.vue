@@ -38,12 +38,12 @@
         <button class="diff-card beginner" @click="selectDifficulty('beginner')">
           <h3>BEGINNER</h3>
         </button>
-        <button class="diff-card intermediate locked" @click="selectDifficulty('intermediate')">
-          <span class="lock-icon">🔒</span>
-          <h3>INTERMEDIATE</h3>
+        <button class="diff-card intermediate" :class="{ locked: authStore.userStats.level < 2 }" @click="selectDifficulty('advanced')">
+          <span v-if="authStore.userStats.level < 2" class="lock-icon">🔒</span>
+          <h3>ADVANCED</h3>
         </button>
-        <button class="diff-card pro locked" @click="selectDifficulty('pro')">
-          <span class="lock-icon">🔒</span>
+        <button class="diff-card pro" :class="{ locked: authStore.userStats.level < 3 }" @click="selectDifficulty('pro')">
+          <span v-if="authStore.userStats.level < 3" class="lock-icon">🔒</span>
           <h3>PRO</h3>
         </button>
       </div>
@@ -96,18 +96,22 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['go-to-admin', 'toggle-theme', 'go-to-profile', 'go-to-quests', 'go-to-beginner'])
+const emit = defineEmits(['go-to-admin', 'toggle-theme', 'go-to-profile', 'go-to-quests', 'go-to-lesson'])
 
 async function handleLogout() {
   await authStore.signOut()
 }
 
 function selectDifficulty(diff) {
-  if (diff === 'intermediate' || diff === 'pro') {
+  if (diff === 'advanced' && authStore.userStats.level < 2) {
     alert('Dieser Modus ist gesperrt. Bitte schließe zuerst das Level "Beginner" ab.')
     return
   }
-  emit('go-to-beginner')
+  if (diff === 'pro' && authStore.userStats.level < 3) {
+    alert('Dieser Modus ist gesperrt. Bitte schließe zuerst das Level "Advanced" ab.')
+    return
+  }
+  emit('go-to-lesson', diff)
 }
 </script>
 
