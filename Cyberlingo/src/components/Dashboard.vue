@@ -51,8 +51,16 @@
 
     <aside class="stats-sidebar">
       <div class="stats-header">
-        <div class="team-badge" :class="authStore.profile.team">
-          {{ authStore.profile.team === 'red' ? 'RED TEAM' : 'BLUE TEAM' }}
+        <div class="team-switch-container">
+          <button 
+            class="team-badge clickable" 
+            :class="authStore.profile.team"
+            style="border-style: solid; cursor: pointer;"
+            @click="openTeamSelection"
+            title="Team wechseln"
+          >
+            {{ authStore.profile.team === 'red' ? 'RED TEAM' : 'BLUE TEAM' }} ✏️
+          </button>
         </div>
         <div class="stat-item">
           <span class="label">XP</span>
@@ -71,12 +79,16 @@
       <div class="quests-section">
         <h3>QUESTS</h3>
         <div class="quest-list">
-          <div v-for="quest in storeData.quests.filter(q => q.isActive)" :key="quest.id" class="quest-item">
+          <div v-for="quest in activeQuests" :key="quest.id" class="quest-item" :class="{ completed: quest.completed }">
             <div class="quest-icon">{{ quest.icon }}</div>
             <div class="quest-details">
               <h4>{{ quest.title }}</h4>
-              <p>0 / {{ quest.xpReward }} XP</p>
+              <p v-if="quest.completed" class="done-text">Bereit zum Abholen! ⚡</p>
+              <p v-else>{{ quest.description }}</p>
             </div>
+          </div>
+          <div v-if="activeQuests.length === 0" class="no-quests">
+            Alle aktuellen Quests erledigt! 🎉
           </div>
         </div>
         <button class="view-quests-btn" @click="$emit('go-to-quests')">Alle Quests ansehen</button>
@@ -86,8 +98,13 @@
 </template>
 
 <script setup>
-import { store as storeData } from '../dataStore.js'
+import { computed } from 'vue'
+import { dynamicQuests } from '../dataStore.js'
 import { authStore } from '../authStore.js'
+
+const activeQuests = computed(() => {
+  return dynamicQuests.value.filter(q => q.isActive && !q.claimed).slice(0, 3)
+})
 
 defineProps({
   selectedTeam: {
@@ -96,7 +113,11 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['go-to-admin', 'toggle-theme', 'go-to-profile', 'go-to-quests', 'go-to-lesson'])
+const emit = defineEmits(['go-to-admin', 'toggle-theme', 'go-to-profile', 'go-to-quests', 'go-to-lesson', 'go-to-team-selection'])
+
+function openTeamSelection() {
+  emit('go-to-team-selection')
+}
 
 async function handleLogout() {
   await authStore.signOut()
@@ -290,6 +311,22 @@ function selectDifficulty(diff) {
   background: var(--accent-teal-glow);
   color: var(--accent-teal);
   border: 1px solid var(--accent-teal);
+}
+
+.team-switch-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.team-badge.clickable {
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+.team-badge.clickable:hover {
+  filter: brightness(1.2);
 }
 
 .stat-item {

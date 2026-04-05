@@ -1,4 +1,4 @@
-import { reactive, watch } from 'vue'
+import { reactive, watch, computed } from 'vue'
 import { authStore } from './authStore'
 
 const STORAGE_KEY = 'cyberlingo-data'
@@ -44,7 +44,7 @@ const defaultData = {
       icon: '🏆',
       xpReward: 250,
       difficulty: 'intermediate',
-      isActive: false,
+      isActive: true,
       completed: false,
       claimed: false,
     },
@@ -55,7 +55,7 @@ const defaultData = {
       icon: '🔥',
       xpReward: 500,
       difficulty: 'pro',
-      isActive: false,
+      isActive: true,
       completed: false,
       claimed: false,
     },
@@ -106,10 +106,47 @@ export const store = reactive(saved || JSON.parse(JSON.stringify(defaultData)))
 store.quests = store.quests.map(q => {
   const def = defaultData.quests.find(d => d.id === q.id)
   return {
-    completed: def?.completed ?? false,
-    claimed: false,
     ...q,
   }
+})
+
+export const dynamicQuests = computed(() => {
+  return store.quests.map(q => {
+    let completed = false
+    const stats = authStore.userStats
+
+    if (q.id === 1) { // 1st Login
+      completed = !!authStore.user
+    } else if (q.id === 2) { // 1 Lektion
+      let topicCount = 0
+      Object.values(stats.lesson_progress || {}).forEach(teamLvl => {
+        Object.values(teamLvl || {}).forEach(prog => {
+          if (prog.topicQuizDone) {
+            topicCount += prog.topicQuizDone.filter(Boolean).length
+          }
+        })
+      })
+      completed = topicCount >= 1
+    } else if (q.id === 3) { // 5 Lektionen
+      let topicCount = 0
+      Object.values(stats.lesson_progress || {}).forEach(teamLvl => {
+        Object.values(teamLvl || {}).forEach(prog => {
+          if (prog.topicQuizDone) {
+            topicCount += prog.topicQuizDone.filter(Boolean).length
+          }
+        })
+      })
+      completed = topicCount >= 5
+    } else if (q.id === 4) { // 7-day streak
+      completed = stats.streak >= 7
+    } else {
+      // Fallback for custom admin quests (just use whatever is in store)
+      completed = q.completed
+    }
+
+    const claimed = stats.claimed_quests?.includes(q.id) || false
+    return { ...q, completed, claimed }
+  })
 })
 
 // Persist quests/levels to localStorage

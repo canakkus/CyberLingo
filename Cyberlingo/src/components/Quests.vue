@@ -91,7 +91,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { store, updateQuest } from '../dataStore'
+import { dynamicQuests } from '../dataStore'
 import { authStore } from '../authStore'
 
 defineEmits(['go-back'])
@@ -101,9 +101,9 @@ const claimingId = ref(null)
 const xpPopup = ref({ visible: false, amount: 0, x: 0, y: 0 })
 
 const filteredQuests = computed(() => {
-  if (activeFilter.value === 'all') return store.quests
-  if (activeFilter.value === 'active') return store.quests.filter(q => q.isActive && !q.completed)
-  return store.quests.filter(q => q.claimed)
+  if (activeFilter.value === 'all') return dynamicQuests.value
+  if (activeFilter.value === 'active') return dynamicQuests.value.filter(q => q.isActive && !q.claimed)
+  return dynamicQuests.value.filter(q => q.claimed)
 })
 
 function progressWidth(quest) {
@@ -116,33 +116,29 @@ async function claimXP(quest, event) {
   if (claimingId.value) return
   claimingId.value = quest.id
 
-  // Get click position for the popup
-  const rect = event.currentTarget.getBoundingClientRect()
-  xpPopup.value = {
-    visible: false,
-    amount: quest.xpReward,
-    x: rect.left + rect.width / 2,
-    y: rect.top - 20
+  try {
+    // Get click position for the popup
+    const rect = event.currentTarget.getBoundingClientRect()
+    xpPopup.value = {
+      visible: false,
+      amount: quest.xpReward,
+      x: rect.left + rect.width / 2,
+      y: rect.top - 20
+    }
+
+    // Short delay for claiming animation
+    await new Promise(r => setTimeout(r, 400))
+
+    // Award XP and register claim in Supabase
+    await authStore.claimQuest(quest.id, quest.xpReward)
+
+    // Show XP popup
+    xpPopup.value.visible = true
+  } catch (err) {
+    console.error('Quest claim failed:', err)
+  } finally {
+    claimingId.value = null
   }
-
-  // Short delay for claiming animation
-  await new Promise(r => setTimeout(r, 500))
-
-  // Award XP
-  const newXp = authStore.userStats.xp + quest.xpReward
-  await authStore.saveUserStats({
-    xp: newXp,
-    level: authStore.userStats.level,
-    streak: authStore.userStats.streak
-  })
-  authStore.userStats.xp = newXp
-
-  // Mark quest as claimed in dataStore
-  updateQuest(quest.id, { claimed: true, completed: true })
-
-  // Show XP popup
-  xpPopup.value.visible = true
-  claimingId.value = null
 
   // Hide popup after animation
   setTimeout(() => {

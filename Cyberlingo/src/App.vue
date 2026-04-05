@@ -20,6 +20,7 @@
       @go-to-quests="currentPage = 'quests'"
       @go-to-lesson="(lvl) => { currentLevel = lvl; currentPage = 'lesson' }"
       @toggle-theme="toggleTheme"
+      @go-to-team-selection="currentPage = 'team-selection'"
     />
   </main>
 
@@ -135,7 +136,7 @@ onUnmounted(() => {
   --bg-main: #0b1220;
   --bg-card: rgba(10, 20, 36, 0.95);
   --bg-card-alt: rgba(16, 29, 51, 0.4);
-  --bg-hero: linear-gradient(180deg, rgba(10, 20, 36, 0.95), rgba(10, 18, 31, 0.95));
+  --bg-hero: rgba(10, 20, 36, 0.95);
   --border-color: #243a5c;
   --text-primary: #f1f7ff;
   --text-secondary: #a6bcdb;
@@ -153,7 +154,7 @@ onUnmounted(() => {
   --bg-main: #f0f4f8;
   --bg-card: #ffffff;
   --bg-card-alt: #e1e8f0;
-  --bg-hero: linear-gradient(180deg, #ffffff, #f0f4f8);
+  --bg-hero: #ffffff;
   --border-color: #d1dceb;
   --text-primary: #1a2b4b;
   --text-secondary: #5a6d8c;

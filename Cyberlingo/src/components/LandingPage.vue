@@ -185,10 +185,7 @@ async function handleGoogleSignIn() {
 
 .hero {
   padding: 2rem;
-  background: 
-    radial-gradient(circle at 0% 0%, var(--accent-teal-glow), transparent 42%),
-    radial-gradient(circle at 85% 0%, var(--accent-red-glow), transparent 48%),
-    var(--bg-card);
+  background: var(--bg-card);
 }
 
 .eyebrow {

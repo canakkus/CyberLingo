@@ -19,6 +19,8 @@ export const authStore = reactive({
     xp: 0,
     level: 1,
     streak: 0,
+    lesson_progress: {},
+    claimed_quests: [],
   },
 
   googlePrefill: {
@@ -29,6 +31,14 @@ export const authStore = reactive({
   async initialize() {
     this.loading = true
     try {
+      // Restore admin session from localStorage if present
+      if (localStorage.getItem('cyberlingo_admin') === 'true') {
+        this.user = { email: 'admin@cyberlingo.internal', id: 'admin-id' }
+        this.isAdmin = true
+        this.loading = false
+        return
+      }
+
       const { data: { session }, error } = await supabase.auth.getSession()
       if (error) console.error('Error fetching session:', error)
 
@@ -61,7 +71,7 @@ export const authStore = reactive({
       } else {
         this.user = null
         this.profile = { team: null, display_name: null }
-        this.userStats = { xp: 0, level: 1, streak: 0 }
+        this.userStats = { xp: 0, level: 1, streak: 0, lesson_progress: {}, claimed_quests: [] }
       }
     })
   },
@@ -74,6 +84,7 @@ export const authStore = reactive({
   },
 
   async loadProfileFor(userId) {
+    if (userId === 'admin-id') return
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -97,6 +108,10 @@ export const authStore = reactive({
 
   async saveTeam(team) {
     if (!this.user) return
+    if (this.isAdmin) {
+      this.profile.team = team
+      return
+    }
     try {
       const { error } = await supabase
         .from('profiles')
@@ -104,6 +119,7 @@ export const authStore = reactive({
 
       if (error) {
         console.error('Error saving team:', error)
+        alert('Fehler beim Speichern des Teams in Supabase: ' + error.message)
         return
       }
       this.profile.team = team
@@ -130,10 +146,11 @@ export const authStore = reactive({
   },
 
   async loadUserStatsFor(userId) {
+    if (userId === 'admin-id') return
     try {
       const { data, error } = await supabase
         .from('user_stats')
-        .select('xp, level, streak')
+        .select('xp, level, streak, lesson_progress, claimed_quests')
         .eq('id', userId)
         .single()
 
@@ -146,6 +163,8 @@ export const authStore = reactive({
         this.userStats.xp = data.xp ?? 0
         this.userStats.level = data.level ?? 1
         this.userStats.streak = data.streak ?? 0
+        this.userStats.lesson_progress = data.lesson_progress ?? {}
+        this.userStats.claimed_quests = data.claimed_quests || []
       }
     } catch (err) {
       console.error('loadUserStats failed:', err)
@@ -154,12 +173,20 @@ export const authStore = reactive({
 
   async saveUserStats(stats) {
     if (!this.user) return
+    
+    // Update local state immediately
+    Object.assign(this.userStats, stats)
+
+    if (this.isAdmin) return // Admin stats are session-only
+
     try {
       const updates = {
         id: this.user.id,
         xp: stats.xp ?? this.userStats.xp,
         level: stats.level ?? this.userStats.level,
         streak: stats.streak ?? this.userStats.streak,
+        lesson_progress: stats.lesson_progress ?? this.userStats.lesson_progress,
+        claimed_quests: stats.claimed_quests ?? this.userStats.claimed_quests,
         updated_at: new Date().toISOString(),
       }
 
@@ -169,13 +196,30 @@ export const authStore = reactive({
 
       if (error) {
         console.error('Error saving user stats:', error)
+        alert('Datenbank-Fehler (Supabase): ' + error.message + '\n\nHast du die Spalten lesson_progress und claimed_quests wirklich hinzugefügt?')
         return
       }
-
-      Object.assign(this.userStats, updates)
     } catch (err) {
       console.error('saveUserStats failed:', err)
     }
+  },
+
+  async saveLessonProgress(team, level, progressData) {
+    if (!this.user) return
+    const currentProgress = JSON.parse(JSON.stringify(this.userStats.lesson_progress))
+    if (!currentProgress[team]) currentProgress[team] = {}
+    currentProgress[team][level] = progressData
+    await this.saveUserStats({ lesson_progress: currentProgress })
+  },
+
+  async claimQuest(questId, xpReward) {
+    if (!this.user) return
+    if (this.userStats.claimed_quests.includes(questId)) return
+    
+    const newClaimed = [...this.userStats.claimed_quests, questId]
+    const newXp = this.userStats.xp + xpReward
+    
+    await this.saveUserStats({ xp: newXp, claimed_quests: newClaimed })
   },
 
   // --- Auth ---
@@ -209,6 +253,7 @@ export const authStore = reactive({
       this.user = { email: 'admin@cyberlingo.internal', id: 'admin-id' }
       this.isAdmin = true
       this.loading = false
+      localStorage.setItem('cyberlingo_admin', 'true')
       return { user: this.user }
     }
 
@@ -220,12 +265,13 @@ export const authStore = reactive({
 
   async signOut() {
     this.isAdmin = false
+    localStorage.removeItem('cyberlingo_admin')
     const { error } = await supabase.auth.signOut()
     if (error) throw error
     this.user = null
     this.session = null
     this.profile = { team: null, display_name: null }
-    this.userStats = { xp: 0, level: 1, streak: 0 }
+    this.userStats = { xp: 0, level: 1, streak: 0, lesson_progress: {}, claimed_quests: [] }
   },
 
   async signInWithGoogle() {

@@ -31,6 +31,7 @@
 
             <Transition name="slide">
               <div v-if="expandedTopic === ti && isTopicUnlocked(ti)" class="topic-content">
+                <button v-if="authStore.isAdmin && !topicReadDone[ti]" class="nav-btn-small finish" style="margin-bottom: 1rem;" @click="markTopicRead(ti)">Admin: Skip Theory</button>
                 <div
                   v-for="(sec, si) in topic.sections"
                   :key="si"
@@ -116,7 +117,10 @@
         <div class="quiz-modal">
           <div class="quiz-header">
             <h2>📝 {{ activeQuizTitle }}</h2>
-            <button class="close-btn" @click="activeQuiz = null">✕</button>
+            <div style="display: flex; gap: 10px;">
+              <button v-if="authStore.isAdmin" class="nav-btn-small" style="border-color: var(--accent-teal); color: var(--accent-teal);" @click="adminSkipQuiz()">Admin Skip</button>
+              <button class="close-btn" @click="activeQuiz = null">✕</button>
+            </div>
           </div>
 
           <div v-if="!quizCompleted" class="quiz-body">
@@ -176,11 +180,18 @@
 
           <!-- Quiz Complete -->
           <div v-else class="quiz-complete">
-            <div class="complete-icon">🏆</div>
-            <h3>Quiz abgeschlossen!</h3>
+            <div class="complete-icon">{{ passedQuiz ? '🏆' : '❌' }}</div>
+            <h3>{{ passedQuiz ? 'Quiz bestanden!' : 'Quiz nicht bestanden' }}</h3>
             <p class="score-text">{{ correctCount }} / {{ activeQuestions.filter(q => q.type !== 'open').length }} MC-Fragen richtig</p>
-            <p class="xp-reward-text">+{{ activeQuiz === 'final' ? 300 : 100 }} XP verdient! ⚡</p>
-            <button class="nav-btn-small primary" @click="claimXP">XP abholen</button>
+            
+            <template v-if="passedQuiz">
+              <p class="xp-reward-text">+{{ activeQuiz === 'final' ? 300 : 100 }} XP verdient! ⚡</p>
+              <button class="nav-btn-small primary" style="margin-top: 1rem;" @click="claimXP">XP abholen</button>
+            </template>
+            <template v-else>
+              <p class="xp-reward-text" style="color: var(--accent-red);">Du benötigst mindestens 50% richtige Antworten.</p>
+              <button class="nav-btn-small" style="margin-top: 1rem; border-color: var(--text-secondary);" @click="retryQuiz">Nochmal versuchen</button>
+            </template>
           </div>
         </div>
       </div>
@@ -189,7 +200,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, defineProps, defineEmits } from 'vue'
+import { ref, computed, watch, defineProps, defineEmits, onMounted } from 'vue'
 import { authStore } from '../authStore.js'
 import { lessonsData } from '../data/lessonData.js'
 
@@ -209,7 +220,24 @@ const lessonDataObj = computed(() => {
 
 const lessonDataTitle = computed(() => `🛡️ ${lessonDataObj.value.title}`)
 const levelBadgeText = computed(() => props.level.toUpperCase())
-const topics = computed(() => lessonDataObj.value.topics)
+
+const topics = computed(() => {
+  return lessonDataObj.value.topics.map((t, index) => {
+    const icons = ['🔐', '🔑', '🌐']
+    return {
+      title: t.title,
+      icon: t.icon || icons[index % icons.length],
+      quiz: t.quiz,
+      sections: t.content.map(text => {
+        const lines = text.split('\n')
+        if (lines.length > 1) {
+          return { title: lines[0], content: '<p>' + lines.slice(1).join('</p><p>') + '</p>' }
+        }
+        return { title: 'Information', content: '<p>' + text + '</p>' }
+      })
+    }
+  })
+})
 
 // --- State ---
 const expandedTopic = ref(null)
@@ -220,6 +248,23 @@ const finalQuizDone = ref(false)
 const finalUnlockAnim = ref(false)
 const activeQuiz = ref(null) // 0,1,2 or 'final'
 
+onMounted(() => {
+  const savedProgress = authStore.userStats.lesson_progress?.[currentTeam.value]?.[props.level]
+  if (savedProgress) {
+    topicReadDone.value = savedProgress.topicReadDone || [false, false, false]
+    topicQuizDone.value = savedProgress.topicQuizDone || [false, false, false]
+    finalQuizDone.value = savedProgress.finalQuizDone || false
+  }
+})
+
+function syncProgress() {
+  authStore.saveLessonProgress(currentTeam.value, props.level, {
+    topicReadDone: topicReadDone.value,
+    topicQuizDone: topicQuizDone.value,
+    finalQuizDone: finalQuizDone.value
+  })
+}
+
 // Quiz state
 const currentQ = ref(0)
 const selectedAns = ref(null)
@@ -227,6 +272,21 @@ const answered = ref(false)
 const correctCount = ref(0)
 const quizCompleted = ref(false)
 const openAnswers = ref({})
+
+const passedQuiz = computed(() => {
+  const mcCount = activeQuestions.value.filter(q => q.type !== 'open').length
+  if (mcCount === 0) return true
+  return (correctCount.value / mcCount) >= 0.5
+})
+
+function retryQuiz() {
+  currentQ.value = 0
+  selectedAns.value = null
+  answered.value = false
+  correctCount.value = 0
+  quizCompleted.value = false
+  openAnswers.value = {}
+}
 
 function isTopicUnlocked(ti) {
   if (ti === 0) return true
@@ -241,6 +301,7 @@ function toggleTopic(ti) {
 function markTopicRead(ti) {
   topicReadDone.value[ti] = true
   expandedTopic.value = null
+  syncProgress()
 }
 
 function openTopicQuiz(ti) {
@@ -281,6 +342,11 @@ function nextQ() {
   }
 }
 
+function adminSkipQuiz() {
+  correctCount.value = activeQuestions.value.length
+  quizCompleted.value = true
+}
+
 async function claimXP() {
   const xpGain = activeQuiz.value === 'final' ? 300 : 100
   const newXp = authStore.userStats.xp + xpGain
@@ -290,16 +356,33 @@ async function claimXP() {
     if (props.level === 'beginner' && newLevel < 2) newLevel = 2
     if (props.level === 'advanced' && newLevel < 3) newLevel = 3
   }
-  
-  await authStore.saveUserStats({ xp: newXp, level: newLevel, streak: authStore.userStats.streak })
-  authStore.userStats.xp = newXp
-  authStore.userStats.level = newLevel
 
+  // Update local mission state
   if (activeQuiz.value === 'final') {
     finalQuizDone.value = true
   } else {
     topicQuizDone.value[activeQuiz.value] = true
   }
+
+  // Combine XP update and Progress update into ONE DB call to prevent race conditions
+  const updatedProgress = JSON.parse(JSON.stringify(authStore.userStats.lesson_progress || {}))
+  if (!updatedProgress[currentTeam.value]) updatedProgress[currentTeam.value] = {}
+  updatedProgress[currentTeam.value][props.level] = {
+    topicReadDone: topicReadDone.value,
+    topicQuizDone: topicQuizDone.value,
+    finalQuizDone: finalQuizDone.value
+  }
+
+  await authStore.saveUserStats({ 
+    xp: newXp, 
+    level: newLevel, 
+    lesson_progress: updatedProgress 
+  })
+
+  // Synchronize local store (Object.assign in authStore covers this, but we update refs)
+  authStore.userStats.xp = newXp
+  authStore.userStats.level = newLevel
+  
   activeQuiz.value = null
 }
 

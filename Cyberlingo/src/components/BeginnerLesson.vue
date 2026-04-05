@@ -761,11 +761,44 @@ const finalQuizQuestions = [
   flex-shrink: 0;
 }
 .quiz-circle.locked { opacity: 0.35; cursor: not-allowed; filter: grayscale(1); }
-.quiz-circle.unlocked:not(.done):hover { transform: scale(1.15) rotate(5deg); box-shadow: 0 10px 30px var(--accent-teal-glow); border-color: var(--accent-teal); }
+.quiz-circle:not(.locked):hover { transform: scale(1.15); box-shadow: 0 10px 30px var(--accent-teal-glow); border-color: var(--accent-teal); }
 .quiz-circle.unlocked { border-color: var(--accent-teal); }
 .quiz-circle.done { border-color: var(--accent-teal); background: var(--accent-teal-glow); }
 
+/* ---- Icon Spin Animation (Mario-Star style) ---- */
+.quiz-circle-icon,
+.final-star-icon {
+  display: inline-block;
+  transform-origin: center;
+  will-change: transform;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+/* Small quiz circle icon */
 .quiz-circle-icon { font-size: 1.6rem; line-height: 1; }
+
+/* Trigger on parent hover — spin loops as long as hovered */
+.quiz-circle:not(.locked):hover .quiz-circle-icon {
+  animation: marioSpin 0.4s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(31, 179, 156, 0.7));
+}
+
+@keyframes marioSpin {
+  0%   { transform: rotateY(0deg)   scaleX(1); }
+  25%  { transform: rotateY(90deg)  scaleX(0.1); }
+  50%  { transform: rotateY(180deg) scaleX(1); }
+  75%  { transform: rotateY(270deg) scaleX(0.1); }
+  100% { transform: rotateY(360deg) scaleX(1); }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .quiz-circle:not(.locked):hover .quiz-circle-icon,
+  .final-star.unlocked:hover .final-star-icon {
+    animation: none;
+    transform: scale(1.2);
+  }
+}
 .quiz-circle-label { font-size: 0.62rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
 .quiz-lock { position: absolute; top: -4px; right: -4px; font-size: 1rem; }
 
@@ -821,8 +854,9 @@ const finalQuizQuestions = [
   filter: none;
   opacity: 1;
 }
+.final-star { perspective: 800px; }
 .final-star.unlocked:hover {
-  transform: scale(1.12) rotate(3deg);
+  transform: scale(1.12);
   box-shadow: 0 16px 50px var(--accent-teal-glow);
 }
 
@@ -837,6 +871,11 @@ const finalQuizQuestions = [
 }
 
 .final-star-icon { font-size: 3rem; line-height: 1; }
+
+.final-star.unlocked:hover .final-star-icon {
+  animation: marioSpin 0.35s linear infinite;
+  filter: drop-shadow(0 0 10px rgba(31, 179, 156, 0.85));
+}
 .final-star-label { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 4px; }
 .final-lock { position: absolute; top: -6px; right: -6px; font-size: 1.3rem; }
 .final-hint { color: var(--text-secondary); font-size: 0.85rem; text-align: center; max-width: 280px; }
