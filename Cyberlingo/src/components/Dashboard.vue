@@ -7,11 +7,22 @@
           Profile
         </button>
         <button class="nav-btn">
-          <span class="icon">🛒</span>
+          <span class="icon">
+            <!-- Store icon -->
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 4H4C2.9 4 2 4.9 2 6v2.5c0 .83.5 1.55 1.22 1.88V19c0 1.1.9 2 2 2h13.56c1.1 0 2-.9 2-2v-8.62C21.5 10.05 22 9.33 22 8.5V6c0-1.1-.9-2-2-2zm-1 15H5v-8h14v8zm1-10H4V6h16v3z"/>
+              <path d="M3 6.5c0 .83.67 1.5 1.5 1.5S6 7.33 6 6.5 5.33 5 4.5 5 3 5.67 3 6.5zm4.5 0C7.5 7.33 8.17 8 9 8s1.5-.67 1.5-1.5S9.83 5 9 5s-1.5.67-1.5 1.5zm4.5 0c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5S14.33 5 13.5 5 12 5.67 12 6.5zm4.5 0c0 .83.67 1.5 1.5 1.5S19.5 7.33 19.5 6.5 18.83 5 18 5s-1.5.67-1.5 1.5z"/>
+            </svg>
+          </span>
           Store
         </button>
         <button class="nav-btn">
-          <span class="icon">🔔</span>
+          <span class="icon">
+            <!-- Bell / Notification icon -->
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+            </svg>
+          </span>
           Notifications
         </button>
         <button v-if="authStore.isAdmin" class="nav-btn admin-btn" @click="$emit('go-to-admin')">
@@ -19,11 +30,21 @@
           Admin
         </button>
         <button class="nav-btn theme-toggle" @click="$emit('toggle-theme')">
-          <span class="icon">🌓</span>
+          <span class="icon">
+            <!-- Dark mode moon icon -->
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+            </svg>
+          </span>
           Theme wechseln
         </button>
         <button class="nav-btn logout-btn" @click="handleLogout">
-          <span class="icon">🚪</span>
+          <span class="icon">
+            <!-- Logout icon -->
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </span>
           Abmelden
         </button>
       </nav>
@@ -192,6 +213,18 @@ function selectDifficulty(diff) {
 
 .nav-btn .icon {
   font-size: 1.4rem;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-btn .icon svg {
+  width: 22px;
+  height: 22px;
+  color: currentColor;
 }
 
 /* Dashboard: Main Content */

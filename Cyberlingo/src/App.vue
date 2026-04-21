@@ -513,18 +513,6 @@ h2 {
   box-shadow: 0 20px 40px var(--accent-teal-glow);
 }
 
-.icon-placeholder {
-  width: 80px;
-  height: 80px;
-  background: var(--bg-card-alt);
-  border-radius: 20px;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2.5rem;
-}
-
 .team-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -542,26 +530,21 @@ h2 {
   box-shadow: 0 8px 32px var(--card-shadow);
 }
 
-.icon-placeholder {
-  width: 140px;
-  height: 140px;
-  background-color: var(--bg-main);
-  border-radius: 24px;
-  border: 2px dashed var(--border-color);
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+.knight-icon {
+  width: 160px;
+  height: 180px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  overflow: hidden;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4));
 }
 
-.icon-placeholder img {
+.knight-icon img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  opacity: 0.8;
-  transition: opacity 0.4s ease;
+  object-fit: contain;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .team-card h3 {
@@ -592,15 +575,13 @@ h2 {
   background: var(--bg-card-alt);
 }
 
-.blue-team:hover .icon-placeholder {
-  border-color: var(--accent-teal);
-  box-shadow: 0 0 30px var(--accent-teal-glow);
-  transform: scale(1.05);
+.blue-team:hover .knight-icon {
+  transform: scale(1.08) translateY(-6px);
+  filter: drop-shadow(0 12px 24px rgba(31, 179, 156, 0.5));
 }
 
-.blue-team:hover .icon-placeholder img {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px rgba(31, 179, 156, 0.5));
+.blue-team:hover .knight-icon img {
+  filter: drop-shadow(0 0 14px rgba(31, 179, 156, 0.6));
 }
 
 .blue-team:hover h3 {
@@ -628,15 +609,13 @@ h2 {
   background: var(--bg-card-alt);
 }
 
-.red-team:hover .icon-placeholder {
-  border-color: var(--accent-red);
-  box-shadow: 0 0 30px var(--accent-red-glow);
-  transform: scale(1.05);
+.red-team:hover .knight-icon {
+  transform: scale(1.08) translateY(-6px);
+  filter: drop-shadow(0 12px 24px rgba(226, 88, 110, 0.5));
 }
 
-.red-team:hover .icon-placeholder img {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px rgba(226, 88, 110, 0.5));
+.red-team:hover .knight-icon img {
+  filter: drop-shadow(0 0 14px rgba(226, 88, 110, 0.6));
 }
 
 .red-team:hover h3 {
