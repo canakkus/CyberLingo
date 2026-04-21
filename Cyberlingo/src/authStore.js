@@ -202,7 +202,6 @@ export const authStore = reactive({
 
       if (error) {
         console.error('Error saving user stats:', error)
-        alert('Datenbank-Fehler (Supabase): ' + error.message + '\n\nHast du die Spalten lesson_progress und claimed_quests wirklich hinzugefügt?')
         return
       }
     } catch (err) {
