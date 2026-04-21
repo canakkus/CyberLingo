@@ -195,7 +195,7 @@
             <div class="ai-chat-header-left">
               <div class="ai-avatar">🤖</div>
               <div>
-                <h3>CyberLingo AI</h3>
+                <h3>{{ authStore.profile.team === 'red' ? 'Leo Borek' : 'Markus Witt' }}</h3>
                 <span class="ai-status">
                   <span class="ai-status-dot"></span>
                   Online
@@ -378,7 +378,7 @@ function openAiChat(ti, si) {
   aiMessages.value = [
     {
       role: 'assistant',
-      text: `Hi! Ich bin dein CyberLingo AI Assistent. Frag mich alles zum Thema "${section.title}" – ich helfe dir gerne!`,
+      text: `Hi! Ich bin ${authStore.profile.team === 'red' ? 'Leo Borek' : 'Markus Witt'}, dein CyberLingo AI Assistent. Frag mich alles zum Thema "${section.title}" – ich helfe dir gerne!`,
       time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
     }
   ]
