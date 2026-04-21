@@ -7,7 +7,7 @@
       <div class="teams-wrapper">
         <button class="team-card blue-team" @click="selectTeam('blue')">
           <div class="knight-icon">
-            <img src="/src/assets/blue-knight.png" alt="Blue Team Knight" />
+            <img :src="blueKnight" alt="Blue Team Knight" />
           </div>
           <h3>Blue Team</h3>
           <p>Verteidige Systeme, analysiere Bedrohungen und sichere Netzwerke ab.</p>
@@ -15,7 +15,7 @@
 
         <button class="team-card red-team" @click="selectTeam('red')">
           <div class="knight-icon">
-            <img src="/src/assets/red-knight.png" alt="Red Team Knight" />
+            <img :src="redKnight" alt="Red Team Knight" />
           </div>
           <h3>Red Team</h3>
           <p>Denke wie ein Angreifer, finde Schwachstellen und teste Systeme.</p>
@@ -26,6 +26,9 @@
 </template>
 
 <script setup>
+import blueKnight from '../assets/blue-knight.png'
+import redKnight from '../assets/red-knight.png'
+
 const emit = defineEmits(['team-selected'])
 
 function selectTeam(team) {
