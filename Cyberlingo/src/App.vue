@@ -13,8 +13,9 @@
   />
 
   <main v-else-if="currentPage === 'dashboard'" class="dashboard">
-    <Dashboard 
+    <Dashboard
       :selected-team="selectedTeam"
+      :is-dark-mode="isDarkMode"
       @go-to-admin="currentPage = 'admin'"
       @go-to-profile="currentPage = 'profile'"
       @go-to-quests="currentPage = 'quests'"

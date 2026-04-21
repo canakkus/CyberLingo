@@ -30,11 +30,17 @@
           Admin
         </button>
         <button class="nav-btn theme-toggle" @click="$emit('toggle-theme')">
-          <span class="icon">
-            <!-- Dark mode moon icon -->
-            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
-            </svg>
+          <span class="icon theme-icon-wrap">
+            <Transition name="moon-switch" mode="out-in">
+              <!-- Light mode: outline moon -->
+              <svg v-if="!isDarkMode" key="light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+              <!-- Dark mode: filled moon -->
+              <svg v-else key="dark" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </Transition>
           </span>
           Theme wechseln
         </button>
@@ -91,10 +97,20 @@
           <span class="label">LEVEL</span>
           <span class="value">{{ authStore.userStats.level }}</span>
         </div>
-        <div class="stat-item streak-item" :class="{ 'streak-active': authStore.userStats.streak > 0 }">
+        <div class="stat-item streak-item"
+          :class="{
+            'streak-active': authStore.userStats.streak > 0,
+            'streak-blue': authStore.userStats.streak > 0 && authStore.profile.team === 'blue',
+            'streak-red': authStore.userStats.streak > 0 && authStore.profile.team === 'red'
+          }">
           <span class="label">STREAK</span>
           <span class="value streak-value">
-            <span class="streak-flame" v-if="authStore.userStats.streak > 0">🔥</span>
+            <span class="streak-flame" v-if="authStore.userStats.streak > 0">
+              <!-- Team-colored SVG flame -->
+              <svg class="flame-svg" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5 0.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5 0.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/>
+              </svg>
+            </span>
             {{ authStore.userStats.streak }}
           </span>
         </div>
@@ -134,6 +150,10 @@ defineProps({
   selectedTeam: {
     type: String,
     default: ''
+  },
+  isDarkMode: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -387,32 +407,66 @@ function selectDifficulty(diff) {
 }
 
 /* Streak styling */
-.streak-item.streak-active .label {
-  color: #f97316;
-}
-
 .streak-value {
   display: flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
 .streak-flame {
-  font-size: 1rem;
-  animation: flameFlicker 1.5s ease-in-out infinite;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+}
+
+.flame-svg {
+  width: 18px;
+  height: 18px;
+  animation: flameFlicker 1.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px currentColor);
 }
 
 @keyframes flameFlicker {
-  0%, 100% { transform: scale(1) rotate(-3deg); }
-  25% { transform: scale(1.15) rotate(3deg); }
-  50% { transform: scale(1.05) rotate(-2deg); }
-  75% { transform: scale(1.2) rotate(4deg); }
+  0%, 100% { transform: scaleY(1) scaleX(1) rotate(-2deg); }
+  20%       { transform: scaleY(1.15) scaleX(0.95) rotate(2deg); }
+  40%       { transform: scaleY(0.95) scaleX(1.05) rotate(-3deg); }
+  60%       { transform: scaleY(1.2) scaleX(0.92) rotate(3deg); }
+  80%       { transform: scaleY(1.05) scaleX(1) rotate(-1deg); }
 }
 
-.streak-item.streak-active .value {
-  color: #f97316;
-  text-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+/* Blue team flame */
+.streak-blue .flame-svg { color: #3b82f6; }
+.streak-blue .value     { color: #3b82f6; text-shadow: 0 0 12px rgba(59,130,246,0.6); }
+.streak-blue .label     { color: #3b82f6; }
+
+/* Red team flame */
+.streak-red .flame-svg  { color: #ef4444; }
+.streak-red .value      { color: #ef4444; text-shadow: 0 0 12px rgba(239,68,68,0.6); }
+.streak-red .label      { color: #ef4444; }
+
+/* Fallback (no team) */
+.streak-active:not(.streak-blue):not(.streak-red) .flame-svg { color: #f97316; }
+.streak-active:not(.streak-blue):not(.streak-red) .value     { color: #f97316; }
+
+/* ---- Theme moon icon animation ---- */
+.theme-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Slide+fade transition for moon switch */
+.moon-switch-enter-active,
+.moon-switch-leave-active {
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.moon-switch-enter-from {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+}
+.moon-switch-leave-to {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
 }
 
 .quests-section h3 {
