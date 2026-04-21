@@ -6,16 +6,16 @@
       
       <div class="teams-wrapper">
         <button class="team-card blue-team" @click="selectTeam('blue')">
-          <div class="icon-placeholder">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Blue Team Icon Placeholder" />
+          <div class="knight-icon">
+            <img src="/src/assets/blue-knight.png" alt="Blue Team Knight" />
           </div>
           <h3>Blue Team</h3>
           <p>Verteidige Systeme, analysiere Bedrohungen und sichere Netzwerke ab.</p>
         </button>
 
         <button class="team-card red-team" @click="selectTeam('red')">
-          <div class="icon-placeholder">
-            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" alt="Red Team Icon Placeholder" />
+          <div class="knight-icon">
+            <img src="/src/assets/red-knight.png" alt="Red Team Knight" />
           </div>
           <h3>Red Team</h3>
           <p>Denke wie ein Angreifer, finde Schwachstellen und teste Systeme.</p>
@@ -92,26 +92,21 @@ function selectTeam(team) {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-.icon-placeholder {
-  width: 140px;
-  height: 140px;
-  background-color: #050a14;
-  border-radius: 24px;
-  border: 2px dashed #2f496f;
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+.knight-icon {
+  width: 160px;
+  height: 180px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  overflow: hidden;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.4));
 }
 
-.icon-placeholder img {
+.knight-icon img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  opacity: 0.8;
-  transition: opacity 0.4s ease;
+  object-fit: contain;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .team-card h3 {
@@ -142,15 +137,13 @@ function selectTeam(team) {
   background: linear-gradient(180deg, rgba(19, 59, 74, 0.8), rgba(10, 18, 31, 0.95));
 }
 
-.blue-team:hover .icon-placeholder {
-  border-color: #1fb39c;
-  box-shadow: 0 0 30px rgba(31, 179, 156, 0.3);
-  transform: scale(1.05);
+.blue-team:hover .knight-icon {
+  transform: scale(1.08) translateY(-6px);
+  filter: drop-shadow(0 12px 24px rgba(31, 179, 156, 0.5));
 }
 
-.blue-team:hover .icon-placeholder img {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px rgba(31, 179, 156, 0.5));
+.blue-team:hover .knight-icon img {
+  filter: drop-shadow(0 0 14px rgba(31, 179, 156, 0.6));
 }
 
 .blue-team:hover h3 {
@@ -178,15 +171,13 @@ function selectTeam(team) {
   background: linear-gradient(180deg, rgba(74, 25, 36, 0.8), rgba(10, 18, 31, 0.95));
 }
 
-.red-team:hover .icon-placeholder {
-  border-color: #e2586e;
-  box-shadow: 0 0 30px rgba(226, 88, 110, 0.3);
-  transform: scale(1.05);
+.red-team:hover .knight-icon {
+  transform: scale(1.08) translateY(-6px);
+  filter: drop-shadow(0 12px 24px rgba(226, 88, 110, 0.5));
 }
 
-.red-team:hover .icon-placeholder img {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px rgba(226, 88, 110, 0.5));
+.red-team:hover .knight-icon img {
+  filter: drop-shadow(0 0 14px rgba(226, 88, 110, 0.6));
 }
 
 .red-team:hover h3 {
