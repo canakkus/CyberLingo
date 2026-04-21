@@ -204,7 +204,9 @@
         <div class="ai-chat-window">
           <div class="ai-chat-header">
             <div class="ai-chat-header-left">
-              <div class="ai-avatar">🤖</div>
+              <div class="ai-avatar">
+                <img :src="currentTeam === 'red' ? leoBörekImg : markusWittImg" :alt="currentTeam === 'red' ? 'Leo Borek' : 'Markus Witt'" />
+              </div>
               <div>
                 <h3>{{ currentTeam === 'red' ? 'Leo Borek' : 'Markus Witt' }}</h3>
                 <span class="ai-status">
@@ -226,14 +228,19 @@
               class="ai-msg"
               :class="msg.role"
             >
-              <div class="ai-msg-avatar">{{ msg.role === 'assistant' ? '🤖' : '👤' }}</div>
+              <div class="ai-msg-avatar">
+                <img v-if="msg.role === 'assistant'" :src="currentTeam === 'red' ? leoBörekImg : markusWittImg" :alt="currentTeam === 'red' ? 'Leo Borek' : 'Markus Witt'" />
+                <span v-else>👤</span>
+              </div>
               <div class="ai-msg-bubble">
                 <p>{{ msg.text }}</p>
                 <span class="ai-msg-time">{{ msg.time }}</span>
               </div>
             </div>
             <div v-if="aiTyping" class="ai-msg assistant">
-              <div class="ai-msg-avatar">🤖</div>
+              <div class="ai-msg-avatar">
+                <img :src="currentTeam === 'red' ? leoBörekImg : markusWittImg" :alt="currentTeam === 'red' ? 'Leo Borek' : 'Markus Witt'" />
+              </div>
               <div class="ai-msg-bubble typing">
                 <span class="typing-dot"></span>
                 <span class="typing-dot"></span>
@@ -263,6 +270,8 @@ import { ref, computed, watch, defineProps, defineEmits, onMounted } from 'vue'
 import { authStore } from '../authStore.js'
 import { lessonsData } from '../data/lessonData.js'
 import { askGemini, stripHtml } from '../utils/gemini.js'
+import leoBörekImg from '../assets/leo-borek.jpg'
+import markusWittImg from '../assets/markus-witt.jpg'
 
 const props = defineProps({
   level: {
@@ -996,6 +1005,13 @@ function scrollChat() {
   justify-content: center;
   font-size: 1.3rem;
   box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  overflow: hidden;
+}
+
+.ai-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ai-chat-header h3 {
@@ -1100,6 +1116,7 @@ function scrollChat() {
   width: 32px;
   height: 32px;
   border-radius: 50%;
+  overflow: hidden;
   background: var(--bg-card-alt);
   display: flex;
   align-items: center;
@@ -1110,6 +1127,12 @@ function scrollChat() {
 
 .ai-msg.assistant .ai-msg-avatar {
   background: linear-gradient(135deg, #7c3aed, #3b82f6);
+}
+
+.ai-msg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ai-msg-bubble {
