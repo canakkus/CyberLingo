@@ -250,6 +250,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { authStore } from '../authStore'
+import { askGemini, stripHtml } from '../utils/gemini.js'
 
 const emit = defineEmits(['go-back'])
 
@@ -364,12 +365,16 @@ const aiInput = ref('')
 const aiMessages = ref([])
 const aiTyping = ref(false)
 const chatMessagesRef = ref(null)
-const aiChatContext = ref({ topicTitle: '', sectionTitle: '' })
+const aiChatContext = ref({ topicTitle: '', sectionTitle: '', sectionContent: '' })
 
 function openAiChat(ti, si) {
   const topic = topics[ti]
   const section = topic.sections[si]
-  aiChatContext.value = { topicTitle: topic.title, sectionTitle: section.title }
+  aiChatContext.value = {
+    topicTitle: topic.title,
+    sectionTitle: section.title,
+    sectionContent: stripHtml(section.content || '')
+  }
   aiMessages.value = [
     {
       role: 'assistant',
@@ -380,7 +385,7 @@ function openAiChat(ti, si) {
   showAiChat.value = true
 }
 
-function sendAiMessage() {
+async function sendAiMessage() {
   const text = aiInput.value.trim()
   if (!text) return
   const now = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
@@ -389,15 +394,30 @@ function sendAiMessage() {
   scrollChat()
   aiTyping.value = true
   scrollChat()
-  setTimeout(() => {
+
+  const systemPrompt = `Du bist ein freundlicher Cybersecurity-Lernassistent für CyberLingo.
+Aktuelles Thema: "${aiChatContext.value.topicTitle}", Abschnitt: "${aiChatContext.value.sectionTitle}".
+Lerninhalt: ${aiChatContext.value.sectionContent}
+Beantworte Fragen des Lernenden kurz, klar und auf Deutsch. Bleibe beim Thema Cybersecurity.`
+
+  try {
+    const history = aiMessages.value.slice(1)
+    const responseText = await askGemini(history, systemPrompt)
     aiTyping.value = false
     aiMessages.value.push({
       role: 'assistant',
-      text: `Gute Frage! Das Thema "${aiChatContext.value.sectionTitle}" ist sehr wichtig in der Cybersecurity. Hier eine kurze Erklärung: Diese Funktion wird bald mit einer echten AI verbunden. Bleib dran!`,
+      text: responseText,
       time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
     })
-    scrollChat()
-  }, 1500)
+  } catch (err) {
+    aiTyping.value = false
+    aiMessages.value.push({
+      role: 'assistant',
+      text: `❌ Ups, da ist etwas schiefgelaufen: ${err.message}`,
+      time: new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+    })
+  }
+  scrollChat()
 }
 
 function scrollChat() {
