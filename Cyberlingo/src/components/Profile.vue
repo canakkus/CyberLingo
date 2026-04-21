@@ -31,14 +31,9 @@
             <p v-if="saveNameError" class="name-error">{{ saveNameError }}</p>
             <p>{{ authStore.user?.email }}</p>
             <div class="team-selection">
-              <span class="team-tag" :class="activeTeam" @click="editingTeam = !editingTeam" style="cursor: pointer; transition: filter 0.2s;" title="Team wechseln" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter='brightness(1)'">
+              <span class="team-tag" :class="activeTeam" @click="$emit('go-to-team-selection')" title="Team wechseln">
                 {{ activeTeam === 'red' ? 'RED TEAM' : 'BLUE TEAM' }} ✏️
               </span>
-              <div v-if="editingTeam" style="margin-top: 0.8rem; display: flex; gap: 0.5rem; align-items: center;">
-                <button class="team-btn red-btn" :disabled="savingTeam" @click="changeTeam('red')">Wähle Red</button>
-                <button class="team-btn blue-btn" :disabled="savingTeam" @click="changeTeam('blue')">Wähle Blue</button>
-              </div>
-              <p v-if="saveTeamError" class="name-error" style="margin-top: 0.5rem;">{{ saveTeamError }}</p>
             </div>
           </div>
         </div>
@@ -107,7 +102,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['go-back'])
+defineEmits(['go-back', 'go-to-team-selection'])
 
 const displayName = computed(() => {
   return authStore.profile.display_name
@@ -159,27 +154,6 @@ async function saveName() {
   }
 }
 
-// --- Team Editing ---
-const editingTeam = ref(false)
-const savingTeam = ref(false)
-const saveTeamError = ref('')
-
-async function changeTeam(newTeam) {
-  if (activeTeam.value === newTeam) {
-    editingTeam.value = false
-    return
-  }
-  savingTeam.value = true
-  saveTeamError.value = ''
-  try {
-    await authStore.saveTeam(newTeam)
-    editingTeam.value = false
-  } catch (err) {
-    saveTeamError.value = 'Fehler beim Wechseln des Teams.'
-  } finally {
-    savingTeam.value = false
-  }
-}
 </script>
 
 <style scoped>

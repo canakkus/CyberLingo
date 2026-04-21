@@ -29,6 +29,7 @@
     v-else-if="currentPage === 'profile'"
     :selected-team="selectedTeam"
     @go-back="currentPage = 'dashboard'"
+    @go-to-team-selection="goToTeamSelectionFromProfile"
   />
 
   <Quests
@@ -62,6 +63,7 @@ import { authStore } from './authStore.js'
 
 const currentPage = ref('landing')
 const currentLevel = ref('beginner')
+const afterTeamSelection = ref('dashboard') // where to go after team is picked
 const isDarkMode = ref(localStorage.getItem('theme') !== 'light')
 
 // Team comes from Supabase profile, not local state
@@ -115,13 +117,20 @@ watch(() => authStore.user, (newUser, oldUser) => {
 // Also watch profile.team in case it loads slightly after user
 watch(() => authStore.profile.team, (team) => {
   if (currentPage.value === 'team-selection' && team) {
-    currentPage.value = 'dashboard'
+    currentPage.value = afterTeamSelection.value
+    afterTeamSelection.value = 'dashboard'
   }
 })
 
+function goToTeamSelectionFromProfile() {
+  afterTeamSelection.value = 'profile'
+  currentPage.value = 'team-selection'
+}
+
 async function selectTeam(team) {
   await authStore.saveTeam(team)
-  currentPage.value = 'dashboard'
+  currentPage.value = afterTeamSelection.value
+  afterTeamSelection.value = 'dashboard' // reset
 }
 
 onUnmounted(() => {
