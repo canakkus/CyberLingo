@@ -19,6 +19,7 @@ export const authStore = reactive({
     xp: 0,
     level: 1,
     streak: 0,
+    last_login: null,
     lesson_progress: {},
     claimed_quests: [],
   },
@@ -71,7 +72,7 @@ export const authStore = reactive({
       } else {
         this.user = null
         this.profile = { team: null, display_name: null }
-        this.userStats = { xp: 0, level: 1, streak: 0, lesson_progress: {}, claimed_quests: [] }
+        this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [] }
       }
     })
   },
@@ -150,7 +151,7 @@ export const authStore = reactive({
     try {
       const { data, error } = await supabase
         .from('user_stats')
-        .select('xp, level, streak, lesson_progress, claimed_quests')
+        .select('xp, level, streak, last_login, lesson_progress, claimed_quests')
         .eq('id', userId)
         .single()
 
@@ -163,9 +164,13 @@ export const authStore = reactive({
         this.userStats.xp = data.xp ?? 0
         this.userStats.level = data.level ?? 1
         this.userStats.streak = data.streak ?? 0
+        this.userStats.last_login = data.last_login ?? null
         this.userStats.lesson_progress = data.lesson_progress ?? {}
         this.userStats.claimed_quests = data.claimed_quests || []
       }
+
+      // Update streak based on login date
+      await this.updateStreak()
     } catch (err) {
       console.error('loadUserStats failed:', err)
     }
@@ -185,6 +190,7 @@ export const authStore = reactive({
         xp: stats.xp ?? this.userStats.xp,
         level: stats.level ?? this.userStats.level,
         streak: stats.streak ?? this.userStats.streak,
+        last_login: stats.last_login ?? this.userStats.last_login,
         lesson_progress: stats.lesson_progress ?? this.userStats.lesson_progress,
         claimed_quests: stats.claimed_quests ?? this.userStats.claimed_quests,
         updated_at: new Date().toISOString(),
@@ -202,6 +208,47 @@ export const authStore = reactive({
     } catch (err) {
       console.error('saveUserStats failed:', err)
     }
+  },
+
+  async updateStreak() {
+    if (!this.user || this.isAdmin) return
+
+    const todayDate = new Date()
+    todayDate.setHours(0, 0, 0, 0)
+
+    const lastLoginRaw = this.userStats.last_login
+    const todayStr = todayDate.toISOString().split('T')[0] // "YYYY-MM-DD"
+
+    if (lastLoginRaw) {
+      const lastLoginDate = new Date(lastLoginRaw)
+      lastLoginDate.setHours(0, 0, 0, 0)
+      const lastLoginStr = lastLoginDate.toISOString().split('T')[0]
+
+      if (lastLoginStr === todayStr) {
+        // Already logged in today — no change needed
+        return
+      }
+
+      const diffMs = todayDate - lastLoginDate
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
+
+      if (diffDays === 1) {
+        // Consecutive day → increment streak 🔥
+        this.userStats.streak = (this.userStats.streak || 0) + 1
+      } else {
+        // Streak broken → reset to 1
+        this.userStats.streak = 1
+      }
+    } else {
+      // First login ever → start streak at 1
+      this.userStats.streak = 1
+    }
+
+    this.userStats.last_login = new Date().toISOString()
+    await this.saveUserStats({
+      streak: this.userStats.streak,
+      last_login: this.userStats.last_login,
+    })
   },
 
   async saveLessonProgress(team, level, progressData) {
@@ -271,7 +318,7 @@ export const authStore = reactive({
     this.user = null
     this.session = null
     this.profile = { team: null, display_name: null }
-    this.userStats = { xp: 0, level: 1, streak: 0, lesson_progress: {}, claimed_quests: [] }
+    this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [] }
   },
 
   async signInWithGoogle() {

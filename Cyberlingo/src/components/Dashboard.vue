@@ -91,9 +91,12 @@
           <span class="label">LEVEL</span>
           <span class="value">{{ authStore.userStats.level }}</span>
         </div>
-        <div class="stat-item">
+        <div class="stat-item streak-item" :class="{ 'streak-active': authStore.userStats.streak > 0 }">
           <span class="label">STREAK</span>
-          <span class="value">{{ authStore.userStats.streak }}</span>
+          <span class="value streak-value">
+            <span class="streak-flame" v-if="authStore.userStats.streak > 0">🔥</span>
+            {{ authStore.userStats.streak }}
+          </span>
         </div>
       </div>
 
@@ -381,6 +384,35 @@ function selectDifficulty(diff) {
   font-size: 1.1rem;
   color: var(--text-primary);
   font-weight: 600;
+}
+
+/* Streak styling */
+.streak-item.streak-active .label {
+  color: #f97316;
+}
+
+.streak-value {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.streak-flame {
+  font-size: 1rem;
+  animation: flameFlicker 1.5s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes flameFlicker {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  25% { transform: scale(1.15) rotate(3deg); }
+  50% { transform: scale(1.05) rotate(-2deg); }
+  75% { transform: scale(1.2) rotate(4deg); }
+}
+
+.streak-item.streak-active .value {
+  color: #f97316;
+  text-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
 }
 
 .quests-section h3 {
