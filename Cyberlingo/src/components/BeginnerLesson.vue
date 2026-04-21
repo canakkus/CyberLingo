@@ -181,7 +181,8 @@
             <h3>Quiz abgeschlossen!</h3>
             <p class="score-text">{{ correctCount }} / {{ activeQuestions.filter(q => q.type !== 'open').length }} MC-Fragen richtig</p>
             <p class="xp-reward-text">+{{ activeQuiz === 'final' ? 300 : 100 }} XP verdient! ⚡</p>
-            <button class="nav-btn-small primary" @click="claimXP">XP abholen</button>
+            <p class="coins-reward-text">+{{ quizCoinsEarned }} Ling-Coins 🪙</p>
+            <button class="nav-btn-small primary" @click="claimXP">Belohnung abholen</button>
           </div>
         </div>
       </div>
@@ -280,6 +281,14 @@ const correctCount = ref(0)
 const quizCompleted = ref(false)
 const openAnswers = ref({})
 
+const quizCoinsEarned = computed(() => {
+  const baseCoins = activeQuiz.value === 'final' ? 150 : 50
+  const mcCount = activeQuestions.value.filter(q => q.type !== 'open').length
+  const ratio = mcCount > 0 ? correctCount.value / mcCount : 1
+  const bonus = ratio === 1 ? 25 : 0
+  return Math.floor(baseCoins * ratio) + bonus
+})
+
 function isTopicUnlocked(ti) {
   if (ti === 0) return true
   return topicQuizDone.value[ti - 1]
@@ -336,7 +345,8 @@ function nextQ() {
 async function claimXP() {
   const xpGain = activeQuiz.value === 'final' ? 300 : 100
   const newXp = authStore.userStats.xp + xpGain
-  await authStore.saveUserStats({ xp: newXp, level: authStore.userStats.level, streak: authStore.userStats.streak })
+  const newCoins = (authStore.userStats.coins || 0) + quizCoinsEarned.value
+  await authStore.saveUserStats({ xp: newXp, coins: newCoins, level: authStore.userStats.level, streak: authStore.userStats.streak })
   authStore.userStats.xp = newXp
 
   if (activeQuiz.value === 'final') {
@@ -1124,6 +1134,7 @@ const finalQuizQuestions = [
 .quiz-complete h3 { margin: 0; font-size: 1.6rem; color: var(--text-primary); }
 .score-text { color: var(--text-secondary); margin: 0; font-size: 1.1rem; }
 .xp-reward-text { color: var(--accent-teal); font-weight: 700; font-size: 1.2rem; margin: 0; }
+.coins-reward-text { color: #f5b731; font-weight: 700; font-size: 1.1rem; margin: 0.25rem 0 0; }
 
 /* Transitions */
 .slide-enter-active, .slide-leave-active { transition: all 0.35s ease; overflow: hidden; }

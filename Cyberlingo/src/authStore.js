@@ -22,6 +22,7 @@ export const authStore = reactive({
     last_login: null,
     lesson_progress: {},
     claimed_quests: [],
+    coins: 0,
   },
 
   googlePrefill: {
@@ -72,7 +73,7 @@ export const authStore = reactive({
       } else {
         this.user = null
         this.profile = { team: null, display_name: null }
-        this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [] }
+        this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [], coins: 0 }
       }
     })
   },
@@ -151,7 +152,7 @@ export const authStore = reactive({
     try {
       const { data, error } = await supabase
         .from('user_stats')
-        .select('xp, level, streak, last_login, lesson_progress, claimed_quests')
+        .select('xp, level, streak, last_login, lesson_progress, claimed_quests, coins')
         .eq('id', userId)
         .single()
 
@@ -167,6 +168,7 @@ export const authStore = reactive({
         this.userStats.last_login = data.last_login ?? null
         this.userStats.lesson_progress = data.lesson_progress ?? {}
         this.userStats.claimed_quests = data.claimed_quests || []
+        this.userStats.coins = data.coins ?? 0
       }
 
       // Update streak based on login date
@@ -193,6 +195,7 @@ export const authStore = reactive({
         last_login: stats.last_login ?? this.userStats.last_login,
         lesson_progress: stats.lesson_progress ?? this.userStats.lesson_progress,
         claimed_quests: stats.claimed_quests ?? this.userStats.claimed_quests,
+        coins: stats.coins ?? this.userStats.coins,
         updated_at: new Date().toISOString(),
       }
 
@@ -244,9 +247,12 @@ export const authStore = reactive({
     }
 
     this.userStats.last_login = new Date().toISOString()
+    // Daily login reward: +10 Ling-Coins
+    const newCoins = (this.userStats.coins || 0) + 10
     await this.saveUserStats({
       streak: this.userStats.streak,
       last_login: this.userStats.last_login,
+      coins: newCoins,
     })
   },
 
@@ -261,11 +267,17 @@ export const authStore = reactive({
   async claimQuest(questId, xpReward) {
     if (!this.user) return
     if (this.userStats.claimed_quests.includes(questId)) return
-    
+
     const newClaimed = [...this.userStats.claimed_quests, questId]
     const newXp = this.userStats.xp + xpReward
-    
+
     await this.saveUserStats({ xp: newXp, claimed_quests: newClaimed })
+  },
+
+  async addCoins(amount) {
+    if (!this.user) return
+    const newCoins = (this.userStats.coins || 0) + amount
+    await this.saveUserStats({ coins: newCoins })
   },
 
   // --- Auth ---
@@ -317,7 +329,7 @@ export const authStore = reactive({
     this.user = null
     this.session = null
     this.profile = { team: null, display_name: null }
-    this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [] }
+    this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [], coins: 0 }
   },
 
   async signInWithGoogle() {

@@ -3,32 +3,67 @@
     <!-- Sidebar -->
     <aside class="admin-sidebar">
       <div class="admin-brand">
-        <span class="brand-icon">⚙️</span>
+        <span class="brand-icon">
+          <!-- Gear SVG -->
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </span>
         <h2>Admin Panel</h2>
       </div>
       <nav class="admin-nav">
-        <button 
-          v-for="tab in tabs" 
-          :key="tab.id"
-          class="admin-nav-btn"
-          :class="{ active: activeTab === tab.id }"
-          @click="activeTab = tab.id"
-        >
-          <span class="nav-icon">{{ tab.icon }}</span>
-          {{ tab.label }}
+        <!-- Overview -->
+        <button class="admin-nav-btn" :class="{ active: activeTab === 'overview' }" @click="activeTab = 'overview'">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
+            </svg>
+          </span>
+          Übersicht
         </button>
+        <!-- Quests -->
+        <button class="admin-nav-btn" :class="{ active: activeTab === 'quests' }" @click="activeTab = 'quests'">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+          </span>
+          Quests
+        </button>
+        <!-- Levels -->
+        <button class="admin-nav-btn" :class="{ active: activeTab === 'levels' }" @click="activeTab = 'levels'">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/>
+            </svg>
+          </span>
+          Levels
+        </button>
+        <!-- Theme toggle -->
         <button class="admin-nav-btn theme-toggle" @click="$emit('toggle-theme')">
-          <span class="nav-icon">🌓</span>
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </span>
           Theme wechseln
         </button>
       </nav>
       <div class="sidebar-footer">
         <button class="admin-nav-btn back-btn" @click="$emit('go-back')">
-          <span class="nav-icon">←</span>
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+            </svg>
+          </span>
           Dashboard
         </button>
         <button class="admin-nav-btn logout-btn" @click="handleLogout">
-          <span class="nav-icon">🚪</span>
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+            </svg>
+          </span>
           Logout
         </button>
       </div>
@@ -330,12 +365,6 @@ async function handleLogout() {
 
 const activeTab = ref('overview')
 
-const tabs = [
-  { id: 'overview', label: 'Übersicht', icon: '📊' },
-  { id: 'quests', label: 'Quests', icon: '🎯' },
-  { id: 'levels', label: 'Levels', icon: '📚' }
-]
-
 // --- Computed stats ---
 const totalLessons = computed(() => store.levels.reduce((sum, l) => sum + l.lessons.length, 0))
 const activeQuests = computed(() => store.quests.filter((q) => q.isActive).length)
@@ -528,9 +557,6 @@ function executeDelete() {
   border-bottom: 1px solid var(--border-color);
 }
 
-.brand-icon {
-  font-size: 1.8rem;
-}
 
 .admin-brand h2 {
   font-family: 'Space Grotesk', sans-serif;
@@ -580,6 +606,32 @@ function executeDelete() {
 
 .nav-icon {
   font-size: 1.2rem;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nav-icon svg {
+  width: 22px;
+  height: 22px;
+  color: currentColor;
+}
+
+.brand-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-teal);
+}
+
+.brand-icon svg {
+  width: 28px;
+  height: 28px;
 }
 
 .sidebar-footer {

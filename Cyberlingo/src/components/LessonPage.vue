@@ -187,7 +187,8 @@
             
             <template v-if="passedQuiz">
               <p class="xp-reward-text">+{{ activeQuiz === 'final' ? 300 : 100 }} XP verdient! ⚡</p>
-              <button class="nav-btn-small primary" style="margin-top: 1rem;" @click="claimXP">XP abholen</button>
+              <p class="coins-reward-text">+{{ quizCoinsEarned }} Ling-Coins 🪙</p>
+              <button class="nav-btn-small primary" style="margin-top: 1rem;" @click="claimXP">Belohnung abholen</button>
             </template>
             <template v-else>
               <p class="xp-reward-text" style="color: var(--accent-red);">Du benötigst mindestens 50% richtige Antworten.</p>
@@ -348,6 +349,14 @@ const passedQuiz = computed(() => {
   return (correctCount.value / mcCount) >= 0.5
 })
 
+const quizCoinsEarned = computed(() => {
+  const baseCoins = activeQuiz.value === 'final' ? 150 : 50
+  const mcCount = activeQuestions.value.filter(q => q.type !== 'open').length
+  const ratio = mcCount > 0 ? correctCount.value / mcCount : 1
+  const bonus = ratio === 1 ? 25 : 0  // perfect score bonus
+  return Math.floor(baseCoins * ratio) + bonus
+})
+
 function retryQuiz() {
   currentQ.value = 0
   selectedAns.value = null
@@ -419,7 +428,8 @@ function adminSkipQuiz() {
 async function claimXP() {
   const xpGain = activeQuiz.value === 'final' ? 300 : 100
   const newXp = authStore.userStats.xp + xpGain
-  
+  const newCoins = (authStore.userStats.coins || 0) + quizCoinsEarned.value
+
   let newLevel = authStore.userStats.level
   if (activeQuiz.value === 'final') {
     if (props.level === 'beginner' && newLevel < 2) newLevel = 2
@@ -433,7 +443,7 @@ async function claimXP() {
     topicQuizDone.value[activeQuiz.value] = true
   }
 
-  // Combine XP update and Progress update into ONE DB call to prevent race conditions
+  // Combine XP + coins + progress into ONE DB call to prevent race conditions
   const updatedProgress = JSON.parse(JSON.stringify(authStore.userStats.lesson_progress || {}))
   if (!updatedProgress[currentTeam.value]) updatedProgress[currentTeam.value] = {}
   updatedProgress[currentTeam.value][props.level] = {
@@ -442,16 +452,17 @@ async function claimXP() {
     finalQuizDone: finalQuizDone.value
   }
 
-  await authStore.saveUserStats({ 
-    xp: newXp, 
-    level: newLevel, 
-    lesson_progress: updatedProgress 
+  await authStore.saveUserStats({
+    xp: newXp,
+    level: newLevel,
+    coins: newCoins,
+    lesson_progress: updatedProgress
   })
 
   // Synchronize local store (Object.assign in authStore covers this, but we update refs)
   authStore.userStats.xp = newXp
   authStore.userStats.level = newLevel
-  
+
   activeQuiz.value = null
 }
 
@@ -916,6 +927,7 @@ function scrollChat() {
 .quiz-complete h3 { margin: 0; font-size: 1.6rem; color: var(--text-primary); }
 .score-text { color: var(--text-secondary); margin: 0; font-size: 1.1rem; }
 .xp-reward-text { color: var(--accent-teal); font-weight: 700; font-size: 1.2rem; margin: 0; }
+.coins-reward-text { color: #f5b731; font-weight: 700; font-size: 1.1rem; margin: 0.25rem 0 0; }
 
 /* Transitions */
 .slide-enter-active, .slide-leave-active { transition: all 0.35s ease; overflow: hidden; }
