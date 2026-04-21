@@ -202,7 +202,7 @@ function selectDifficulty(diff) {
 .nav-sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.4rem;
   position: sticky;
   top: 2rem;
 }
@@ -210,18 +210,18 @@ function selectDifficulty(diff) {
 .nav-btn {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.1rem;
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 1.15rem 1.4rem;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 16px;
   color: var(--text-secondary);
   font-family: 'Work Sans', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
@@ -235,9 +235,9 @@ function selectDifficulty(diff) {
 }
 
 .nav-btn .icon {
-  font-size: 1.4rem;
-  width: 22px;
-  height: 22px;
+  font-size: 1.5rem;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,8 +245,8 @@ function selectDifficulty(diff) {
 }
 
 .nav-btn .icon svg {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   color: currentColor;
 }
 
