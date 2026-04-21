@@ -46,6 +46,7 @@
                   <div v-if="currentStep[ti] === si" class="section-body">
                     <div v-html="sec.content"></div>
                     <div class="section-nav">
+                      <button class="nav-btn-small outline" @click="openAiChat()">Ask AI</button>
                       <button v-if="si > 0" class="nav-btn-small" @click="currentStep[ti] = si - 1">← Zurück</button>
                       <button v-if="si < topic.sections.length - 1" class="nav-btn-small primary" @click="currentStep[ti] = si + 1">Weiter →</button>
                       <button v-else class="nav-btn-small primary finish" @click="markTopicRead(ti)">🎉 Theorie abschließen</button>
@@ -185,6 +186,27 @@
         </div>
       </div>
     </Transition>
+
+    <Transition name="fade">
+      <div v-if="isAiChatOpen" class="chat-overlay" @click.self="closeAiChat">
+        <div class="chat-modal">
+          <div class="chat-header">
+            <h3>Ask AI</h3>
+            <button class="close-btn" @click="closeAiChat">✕</button>
+          </div>
+          <div class="chat-messages">
+            <div v-for="(msg, idx) in aiChatMessages" :key="idx" :class="['chat-message', msg.role]">
+              <span class="chat-role">{{ msg.role === 'user' ? 'Du' : 'AI' }}</span>
+              <p>{{ msg.text }}</p>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <textarea v-model="aiChatInput" rows="3" placeholder="Frage an die KI..."></textarea>
+            <button class="nav-btn-small primary" @click="sendAiMessage" :disabled="!aiChatInput.trim()">Senden</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </main>
 </template>
 
@@ -202,6 +224,30 @@ const topicQuizDone = ref([false, false, false])
 const finalQuizDone = ref(false)
 const finalUnlockAnim = ref(false)
 const activeQuiz = ref(null) // 0,1,2 or 'final'
+const isAiChatOpen = ref(false)
+const aiChatInput = ref('')
+const aiChatMessages = ref([{ role: 'assistant', text: 'Stelle hier deine Theoriefrage oder bitte die AI um eine Erklärung.' }])
+
+function openAiChat() {
+  isAiChatOpen.value = true
+}
+
+function closeAiChat() {
+  isAiChatOpen.value = false
+}
+
+function sendAiMessage() {
+  const text = aiChatInput.value.trim()
+  if (!text) return
+  aiChatMessages.value.push({ role: 'user', text })
+  aiChatInput.value = ''
+  setTimeout(() => {
+    aiChatMessages.value.push({
+      role: 'assistant',
+      text: `Hier ist ein KI-Hinweis für deine Frage: "${text}". Du kannst diese Antwort als Diskussionsgrundlage verwenden.`
+    })
+  }, 300)
+}
 
 // Quiz state
 const currentQ = ref(0)
@@ -973,9 +1019,77 @@ const finalQuizQuestions = [
   transition: all 0.2s;
 }
 .nav-btn-small:hover { color: var(--text-primary); border-color: var(--accent-teal); }
+.nav-btn-small.outline { background: transparent; color: var(--accent-teal); border-color: var(--accent-teal); }
 .nav-btn-small.primary { background: var(--accent-teal); color: #062720; border-color: var(--accent-teal); }
 .nav-btn-small.primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
 .nav-btn-small.finish { background: linear-gradient(135deg, var(--accent-teal), #0ea58e); font-size: 0.95rem; padding: 0.55rem 1.4rem; }
+
+.chat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 1200;
+}
+.chat-modal {
+  width: min(640px, 100%);
+  max-height: 90vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.chat-header h3 { margin: 0; font-size: 1rem; color: var(--text-primary); }
+.chat-messages {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.chat-message {
+  border-radius: 18px;
+  padding: 0.9rem 1rem;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+}
+.chat-message.user { align-self: flex-end; background: rgba(35, 155, 255, 0.12); }
+.chat-message.assistant { align-self: flex-start; background: rgba(41, 211, 134, 0.12); }
+.chat-role { display: block; margin-bottom: 0.25rem; font-size: 0.8rem; color: var(--text-secondary); font-weight: 700; }
+.chat-input-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  padding: 1rem 1.2rem 1.2rem;
+  background: var(--bg-card-alt);
+}
+.chat-input-row textarea {
+  width: 100%;
+  min-height: 84px;
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font: inherit;
+  resize: vertical;
+}
+.chat-input-row textarea:focus { outline: none; border-color: var(--accent-teal); }
 
 /* Quiz Complete */
 .quiz-complete {
