@@ -8,7 +8,11 @@
 
       <div class="profile-card">
         <div class="user-info">
-          <div class="avatar-large">{{ userInitial }}</div>
+          <div class="avatar-large" :class="'team-' + activeTeam">
+            <span v-if="equippedAvatarEmoji" class="avatar-emoji">{{ equippedAvatarEmoji }}</span>
+            <span v-else class="avatar-initial">{{ userInitial }}</span>
+            <span v-if="equippedAccessoryEmoji" class="avatar-accessory">{{ equippedAccessoryEmoji }}</span>
+          </div>
           <div class="user-details">
             <div class="name-row">
               <h2 v-if="!editingName">{{ displayName }}</h2>
@@ -94,6 +98,7 @@
 <script setup>
 import { computed, nextTick, ref } from 'vue'
 import { authStore } from '../authStore'
+import { getItemEmoji } from '../data/storeItems.js'
 
 const props = defineProps({
   selectedTeam: {
@@ -117,6 +122,16 @@ const xp = computed(() => authStore.userStats.xp)
 const level = computed(() => authStore.userStats.level)
 const streak = computed(() => authStore.userStats.streak)
 const coins = computed(() => authStore.userStats.coins ?? 0)
+const equippedAvatarEmoji = computed(() => {
+  const id = authStore.userStats.equipped_avatar
+  if (!id || id === 'av-default') return null
+  return getItemEmoji(id)
+})
+const equippedAccessoryEmoji = computed(() => {
+  const id = authStore.userStats.equipped_accessory
+  if (!id) return null
+  return getItemEmoji(id)
+})
 
 // --- Name Editing ---
 const editingName = ref(false)
@@ -219,15 +234,50 @@ h1 {
 .avatar-large {
   width: 100px;
   height: 100px;
-  background: var(--accent-teal);
-  color: #0d192c;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 3rem;
   font-weight: 700;
-  box-shadow: 0 0 20px var(--accent-teal-glow);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.avatar-large.team-blue {
+  background: linear-gradient(135deg, #1e3a5f, #1a6b8a);
+  box-shadow: 0 0 0 3px rgba(31,179,156,0.4), 0 8px 24px rgba(31,179,156,0.2);
+}
+
+.avatar-large.team-red {
+  background: linear-gradient(135deg, #5f1e1e, #8a2a1a);
+  box-shadow: 0 0 0 3px rgba(226,88,110,0.4), 0 8px 24px rgba(226,88,110,0.2);
+}
+
+.avatar-initial {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.avatar-emoji {
+  font-size: 2.8rem;
+  line-height: 1;
+}
+
+.avatar-accessory {
+  position: absolute;
+  top: -14px;
+  right: -8px;
+  font-size: 1.6rem;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  animation: accessoryFloat 2s ease-in-out infinite;
+}
+
+@keyframes accessoryFloat {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50%       { transform: translateY(-4px) rotate(3deg); }
 }
 
 .user-details h2 {

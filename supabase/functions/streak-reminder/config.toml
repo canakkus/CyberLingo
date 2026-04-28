@@ -1,0 +1,2 @@
+[functions.streak-reminder]
+schedule = "0 17 * * *"

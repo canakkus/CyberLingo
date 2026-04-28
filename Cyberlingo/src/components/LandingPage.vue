@@ -4,7 +4,7 @@
       <p class="eyebrow">CyberLingo</p>
       <h1>Cybersecurity lernen wie eine Sprache.</h1>
       <p class="lead">
-        Interaktive Missionen, klare Lernpfade und praxisnahe Uebungen fuer Schulen,
+        Interaktive Missionen, klare Lernpfade und praxisnahe Übungen für Schulen,
         Teams und Selbstlerner.
       </p>
 
@@ -17,7 +17,7 @@
       <ul class="benefits">
         <li>Kurze Lerneinheiten mit messbarem Fortschritt</li>
         <li>Missionen von Grundlagen bis Incident Response</li>
-        <li>Geeignet fuer HTL, Ausbildung und Onboarding</li>
+        <li>Geeignet für HTL, Ausbildung und Onboarding</li>
       </ul>
     </section>
 
@@ -44,9 +44,9 @@
         </button>
       </div>
 
-      <h2>{{ mode === 'login' ? 'Willkommen zurueck' : 'Konto erstellen' }}</h2>
+      <h2>{{ mode === 'login' ? 'Willkommen zurück' : 'Konto erstellen' }}</h2>
       <p class="auth-subtitle">
-        {{ mode === 'login' ? 'Melde dich an und starte deine naechste Mission.' : 'Starte in wenigen Sekunden mit deinem Lernpfad.' }}
+        {{ mode === 'login' ? 'Melde dich an und starte deine nächste Mission.' : 'Starte in wenigen Sekunden mit deinem Lernpfad.' }}
       </p>
 
       <form class="auth-form" @submit.prevent="submitAuth">

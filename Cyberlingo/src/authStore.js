@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { supabase } from './supabase'
+import { notificationStore } from './notificationStore'
 
 export const authStore = reactive({
   user: null,
@@ -177,6 +178,8 @@ export const authStore = reactive({
         this.userStats.equipped_accessory = data.equipped_accessory || null
       }
 
+      notificationStore.init(userId)
+
       // Update streak based on login date
       await this.updateStreak()
     } catch (err) {
@@ -228,7 +231,7 @@ export const authStore = reactive({
     todayDate.setHours(0, 0, 0, 0)
 
     const lastLoginRaw = this.userStats.last_login
-    const todayStr = todayDate.toISOString().split('T')[0] // "YYYY-MM-DD"
+    const todayStr = todayDate.toISOString().split('T')[0]
 
     if (lastLoginRaw) {
       const lastLoginDate = new Date(lastLoginRaw)
@@ -236,7 +239,6 @@ export const authStore = reactive({
       const lastLoginStr = lastLoginDate.toISOString().split('T')[0]
 
       if (lastLoginStr === todayStr) {
-        // Already logged in today — no change needed
         return
       }
 
@@ -244,19 +246,25 @@ export const authStore = reactive({
       const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24))
 
       if (diffDays === 1) {
-        // Consecutive day → increment streak 🔥
         this.userStats.streak = (this.userStats.streak || 0) + 1
       } else {
-        // Streak broken → reset to 1
+        // Streak broken — notify
+        const lostStreak = this.userStats.streak
+        if (lostStreak > 1) {
+          notificationStore.add({
+            type: 'streak_lost',
+            icon: '💔',
+            title: 'Dein Streak ist abgelaufen!',
+            message: `Deine ${lostStreak}-Tage-Serie ist vorbei. Du hast gestern nicht eingeloggt. Starte heute neu!`,
+          })
+        }
         this.userStats.streak = 1
       }
     } else {
-      // First login ever → start streak at 1
       this.userStats.streak = 1
     }
 
     this.userStats.last_login = new Date().toISOString()
-    // Daily login reward: +10 Ling-Coins
     const newCoins = (this.userStats.coins || 0) + 10
     await this.saveUserStats({
       streak: this.userStats.streak,
@@ -359,6 +367,7 @@ export const authStore = reactive({
     this.session = null
     this.profile = { team: null, display_name: null }
     this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [], coins: 0, owned_items: [], equipped_avatar: 'av-default', equipped_accessory: null }
+    notificationStore.reset()
   },
 
   async signInWithGoogle() {
