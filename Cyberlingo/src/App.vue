@@ -31,6 +31,7 @@
     :selected-team="selectedTeam"
     @go-back="currentPage = 'dashboard'"
     @go-to-team-selection="goToTeamSelectionFromProfile"
+    @go-to-store="currentPage = 'store'"
   />
 
   <Quests

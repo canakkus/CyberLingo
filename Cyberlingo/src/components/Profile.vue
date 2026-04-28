@@ -78,6 +78,31 @@
         </div>
       </div>
 
+      <div class="equipment-section">
+        <div class="equipment-header">
+          <h3>Ausrüstung</h3>
+          <button class="go-store-btn" @click="$emit('go-to-store')">🛒 Store</button>
+        </div>
+        <div class="equipment-slots">
+          <div class="equip-slot">
+            <span class="slot-label">Avatar</span>
+            <div class="slot-display" :class="'team-' + activeTeam">
+              <span v-if="equippedAvatarEmoji" class="slot-emoji">{{ equippedAvatarEmoji }}</span>
+              <span v-else class="slot-initial">{{ userInitial }}</span>
+            </div>
+            <span class="slot-name">{{ equippedAvatarName }}</span>
+          </div>
+          <div class="equip-slot">
+            <span class="slot-label">Zubehör</span>
+            <div class="slot-display empty-slot">
+              <span v-if="equippedAccessoryEmoji" class="slot-emoji">{{ equippedAccessoryEmoji }}</span>
+              <span v-else class="slot-none">—</span>
+            </div>
+            <span class="slot-name">{{ equippedAccessoryName }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="achievements-section">
         <h3>Errungenschaften</h3>
         <div class="achievement-list">
@@ -98,7 +123,7 @@
 <script setup>
 import { computed, nextTick, ref } from 'vue'
 import { authStore } from '../authStore'
-import { getItemEmoji } from '../data/storeItems.js'
+import { getItemEmoji, getItemName } from '../data/storeItems.js'
 
 const props = defineProps({
   selectedTeam: {
@@ -107,7 +132,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['go-back', 'go-to-team-selection'])
+defineEmits(['go-back', 'go-to-team-selection', 'go-to-store'])
 
 const displayName = computed(() => {
   return authStore.profile.display_name
@@ -131,6 +156,16 @@ const equippedAccessoryEmoji = computed(() => {
   const id = authStore.userStats.equipped_accessory
   if (!id) return null
   return getItemEmoji(id)
+})
+const equippedAvatarName = computed(() => {
+  const id = authStore.userStats.equipped_avatar
+  if (!id || id === 'av-default') return 'Standard'
+  return getItemName(id)
+})
+const equippedAccessoryName = computed(() => {
+  const id = authStore.userStats.equipped_accessory
+  if (!id) return 'Keins'
+  return getItemName(id)
 })
 
 // --- Name Editing ---
@@ -454,6 +489,106 @@ h1 {
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.equipment-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.equipment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.equipment-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.go-store-btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--accent-teal);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.go-store-btn:hover {
+  background: var(--accent-teal-glow);
+  border-color: var(--accent-teal);
+}
+
+.equipment-slots {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.equip-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.slot-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.slot-display {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  border: 2px solid var(--border-color);
+}
+
+.slot-display.team-blue {
+  background: linear-gradient(135deg, #1e3a5f, #1a6b8a);
+  border-color: rgba(31,179,156,0.4);
+}
+
+.slot-display.team-red {
+  background: linear-gradient(135deg, #5f1e1e, #8a2a1a);
+  border-color: rgba(226,88,110,0.4);
+}
+
+.slot-display.empty-slot {
+  background: var(--bg-card-alt);
+}
+
+.slot-emoji { line-height: 1; }
+.slot-initial {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+.slot-none {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  opacity: 0.4;
+}
+
+.slot-name {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 .achievements-section h3 {
