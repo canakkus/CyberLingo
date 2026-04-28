@@ -23,6 +23,9 @@ export const authStore = reactive({
     lesson_progress: {},
     claimed_quests: [],
     coins: 0,
+    owned_items: [],
+    equipped_avatar: 'av-default',
+    equipped_accessory: null,
   },
 
   googlePrefill: {
@@ -73,7 +76,7 @@ export const authStore = reactive({
       } else {
         this.user = null
         this.profile = { team: null, display_name: null }
-        this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [], coins: 0 }
+        this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [], coins: 0, owned_items: [], equipped_avatar: 'av-default', equipped_accessory: null }
       }
     })
   },
@@ -152,7 +155,7 @@ export const authStore = reactive({
     try {
       const { data, error } = await supabase
         .from('user_stats')
-        .select('xp, level, streak, last_login, lesson_progress, claimed_quests, coins')
+        .select('xp, level, streak, last_login, lesson_progress, claimed_quests, coins, owned_items, equipped_avatar, equipped_accessory')
         .eq('id', userId)
         .single()
 
@@ -169,6 +172,9 @@ export const authStore = reactive({
         this.userStats.lesson_progress = data.lesson_progress ?? {}
         this.userStats.claimed_quests = data.claimed_quests || []
         this.userStats.coins = data.coins ?? 0
+        this.userStats.owned_items = data.owned_items || []
+        this.userStats.equipped_avatar = data.equipped_avatar || 'av-default'
+        this.userStats.equipped_accessory = data.equipped_accessory || null
       }
 
       // Update streak based on login date
@@ -196,6 +202,9 @@ export const authStore = reactive({
         lesson_progress: stats.lesson_progress ?? this.userStats.lesson_progress,
         claimed_quests: stats.claimed_quests ?? this.userStats.claimed_quests,
         coins: stats.coins ?? this.userStats.coins,
+        owned_items: stats.owned_items ?? this.userStats.owned_items,
+        equipped_avatar: stats.equipped_avatar ?? this.userStats.equipped_avatar,
+        equipped_accessory: stats.equipped_accessory !== undefined ? stats.equipped_accessory : this.userStats.equipped_accessory,
         updated_at: new Date().toISOString(),
       }
 
@@ -280,6 +289,26 @@ export const authStore = reactive({
     await this.saveUserStats({ coins: newCoins })
   },
 
+  async buyItem(itemId, price) {
+    if (!this.user) return false
+    if ((this.userStats.coins || 0) < price) return false
+    if (this.userStats.owned_items.includes(itemId)) return false
+    const newCoins = this.userStats.coins - price
+    const newOwned = [...this.userStats.owned_items, itemId]
+    await this.saveUserStats({ coins: newCoins, owned_items: newOwned })
+    return true
+  },
+
+  async equipItem(itemId, type) {
+    if (!this.user) return
+    if (type === 'avatar') {
+      await this.saveUserStats({ equipped_avatar: itemId })
+    } else if (type === 'accessory') {
+      const newVal = this.userStats.equipped_accessory === itemId ? null : itemId
+      await this.saveUserStats({ equipped_accessory: newVal })
+    }
+  },
+
   // --- Auth ---
 
   async signUp(email, password, displayName) {
@@ -329,7 +358,7 @@ export const authStore = reactive({
     this.user = null
     this.session = null
     this.profile = { team: null, display_name: null }
-    this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [], coins: 0 }
+    this.userStats = { xp: 0, level: 1, streak: 0, last_login: null, lesson_progress: {}, claimed_quests: [], coins: 0, owned_items: [], equipped_avatar: 'av-default', equipped_accessory: null }
   },
 
   async signInWithGoogle() {
