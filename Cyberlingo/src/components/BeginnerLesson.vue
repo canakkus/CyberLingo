@@ -181,7 +181,7 @@
             <h3>Quiz abgeschlossen!</h3>
             <p class="score-text">{{ correctCount }} / {{ activeQuestions.filter(q => q.type !== 'open').length }} MC-Fragen richtig</p>
             <p class="xp-reward-text">+{{ activeQuiz === 'final' ? 300 : 100 }} XP verdient! ⚡</p>
-            <p class="coins-reward-text">+{{ quizCoinsEarned }} Ling-Coins 🪙</p>
+            <p class="coins-reward-text">+{{ quizCoinsEarned }} Ling-Coins <img :src="lingcoinImg" class="lingcoin-inline" alt="LC" /></p>
             <button class="nav-btn-small primary" @click="claimXP">Belohnung abholen</button>
           </div>
         </div>
@@ -282,6 +282,7 @@ import { authStore } from '../authStore'
 import { askGemini, stripHtml } from '../utils/gemini.js'
 import leoBörekImg from '../assets/leo-borek.jpg'
 import markusWittImg from '../assets/markus-witt.jpg'
+import lingcoinImg from '../assets/lingcoin.png'
 
 const emit = defineEmits(['go-back'])
 
@@ -1224,6 +1225,7 @@ const finalQuizQuestions = [
 .score-text { color: var(--text-secondary); margin: 0; font-size: 1.1rem; }
 .xp-reward-text { color: var(--accent-teal); font-weight: 700; font-size: 1.2rem; margin: 0; }
 .coins-reward-text { color: #f5b731; font-weight: 700; font-size: 1.1rem; margin: 0.25rem 0 0; }
+.lingcoin-inline { width: 18px; height: 18px; object-fit: contain; vertical-align: middle; margin-left: 2px; }
 
 /* Transitions */
 .slide-enter-active, .slide-leave-active { transition: all 0.35s ease; overflow: hidden; }

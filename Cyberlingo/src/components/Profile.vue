@@ -69,7 +69,7 @@
             </div>
           </div>
           <div class="stat-box coins-box">
-            <span class="stat-icon">🪙</span>
+            <img :src="lingcoinImg" class="lingcoin-stat-icon" alt="LC" />
             <div class="stat-content">
               <span class="stat-value">{{ coins }}</span>
               <span class="stat-label">Ling-Coins</span>
@@ -124,6 +124,7 @@
 import { computed, nextTick, ref } from 'vue'
 import { authStore } from '../authStore'
 import { getItemEmoji, getItemName } from '../data/storeItems.js'
+import lingcoinImg from '../assets/lingcoin.png'
 
 const props = defineProps({
   selectedTeam: {
@@ -303,16 +304,18 @@ h1 {
 
 .avatar-accessory {
   position: absolute;
-  top: -14px;
-  right: -8px;
-  font-size: 1.6rem;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-  animation: accessoryFloat 2s ease-in-out infinite;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2.4rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+  animation: accessoryFloat 2.5s ease-in-out infinite;
 }
 
 @keyframes accessoryFloat {
-  0%, 100% { transform: translateY(0) rotate(-5deg); }
-  50%       { transform: translateY(-4px) rotate(3deg); }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(-4px); }
 }
 
 .user-details h2 {
@@ -662,6 +665,13 @@ h1 {
 /* Coins box */
 .coins-box .stat-icon { font-size: 2rem; }
 .coins-box .stat-value { color: #f5b731; }
+
+.lingcoin-stat-icon {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+  display: block;
+}
 
 @media (max-width: 600px) {
   .user-info {

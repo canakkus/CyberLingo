@@ -3,10 +3,10 @@
     <aside class="nav-sidebar">
       <nav>
         <button class="nav-btn btn-profile" @click="$emit('go-to-profile')">
-          <span class="icon">
-            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-            </svg>
+          <span class="icon nav-avatar" :class="'team-' + (authStore.profile.team || 'blue')">
+            <span v-if="equippedAvatarEmoji" class="nav-avatar-emoji">{{ equippedAvatarEmoji }}</span>
+            <span v-else class="nav-avatar-initial">{{ userInitial }}</span>
+            <span v-if="equippedAccessoryEmoji" class="nav-avatar-accessory">{{ equippedAccessoryEmoji }}</span>
           </span>
           Profile
         </button>
@@ -124,14 +124,14 @@
           </span>
         </div>
         <div class="stat-item">
-          <span class="label">🪙 COINS</span>
+          <span class="label"><img :src="lingcoinImg" class="lingcoin-inline" alt="LC" /> COINS</span>
           <span class="value coins-value">{{ authStore.userStats.coins ?? 0 }}</span>
         </div>
       </div>
 
       <!-- Admin coins setter -->
       <div v-if="authStore.isAdmin" class="admin-streak-setter admin-coins-setter">
-        <span class="admin-streak-label">🪙 Coins setzen</span>
+        <span class="admin-streak-label"><img :src="lingcoinImg" class="lingcoin-inline" alt="LC" /> Coins setzen</span>
         <div class="admin-streak-controls">
           <button class="streak-adj coins-adj" @click="adminSetCoins((authStore.userStats.coins ?? 0) - 50)">−</button>
           <input
@@ -191,8 +191,18 @@ import NotificationsPanel from './NotificationsPanel.vue'
 import { dynamicQuests } from '../dataStore.js'
 import { authStore } from '../authStore.js'
 import { notificationStore } from '../notificationStore.js'
+import { getItemEmoji } from '../data/storeItems.js'
+import lingcoinImg from '../assets/lingcoin.png'
 
 const notifOpen = ref(false)
+
+const userInitial = computed(() => {
+  const name = authStore.profile.display_name || ''
+  return name.trim().charAt(0).toUpperCase() || '?'
+})
+
+const equippedAvatarEmoji = computed(() => getItemEmoji(authStore.userStats.equipped_avatar))
+const equippedAccessoryEmoji = computed(() => authStore.userStats.equipped_accessory ? getItemEmoji(authStore.userStats.equipped_accessory) : null)
 
 const activeQuests = computed(() => {
   return dynamicQuests.value.filter(q => q.isActive && !q.claimed).slice(0, 3)
@@ -312,6 +322,50 @@ function selectDifficulty(diff) {
   width: 28px;
   height: 28px;
   color: currentColor;
+}
+
+.nav-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.nav-avatar.team-blue {
+  background: linear-gradient(135deg, #1a73e8, #0d47a1);
+}
+
+.nav-avatar.team-red {
+  background: linear-gradient(135deg, #e53935, #b71c1c);
+}
+
+.nav-avatar-initial {
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #fff;
+  line-height: 1;
+}
+
+.nav-avatar-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.nav-avatar-accessory {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.6));
 }
 
 /* Dashboard: Main Content */
@@ -472,6 +526,14 @@ function selectDifficulty(diff) {
 
 .coins-value {
   color: #f5b731;
+}
+
+.lingcoin-inline {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 2px;
 }
 
 .notif-badge {
