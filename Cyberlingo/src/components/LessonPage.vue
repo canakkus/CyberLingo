@@ -317,30 +317,6 @@ const topicQuizDone = ref([false, false, false])
 const finalQuizDone = ref(false)
 const finalUnlockAnim = ref(false)
 const activeQuiz = ref(null) // 0,1,2 or 'final'
-const isAiChatOpen = ref(false)
-const aiChatInput = ref('')
-const aiChatMessages = ref([{ role: 'assistant', text: 'Stelle hier deine Theoriefrage oder bitte die AI um eine Erklärung.' }])
-
-function openAiChat() {
-  isAiChatOpen.value = true
-}
-
-function closeAiChat() {
-  isAiChatOpen.value = false
-}
-
-function sendAiMessage() {
-  const text = aiChatInput.value.trim()
-  if (!text) return
-  aiChatMessages.value.push({ role: 'user', text })
-  aiChatInput.value = ''
-  setTimeout(() => {
-    aiChatMessages.value.push({
-      role: 'assistant',
-      text: `Hier ist ein KI-Hinweis für deine Frage: "${text}". Du kannst diese Antwort als Diskussionsgrundlage verwenden.`
-    })
-  }, 300)
-}
 
 onMounted(() => {
   const savedProgress = authStore.userStats.lesson_progress?.[currentTeam.value]?.[props.level]
