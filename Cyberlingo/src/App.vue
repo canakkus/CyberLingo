@@ -19,6 +19,7 @@
       @go-to-admin="currentPage = 'admin'"
       @go-to-profile="currentPage = 'profile'"
       @go-to-quests="currentPage = 'quests'"
+      @go-to-store="currentPage = 'store'"
       @go-to-lesson="(lvl) => { currentLevel = lvl; currentPage = 'lesson' }"
       @toggle-theme="toggleTheme"
       @go-to-team-selection="currentPage = 'team-selection'"
@@ -34,6 +35,11 @@
 
   <Quests
     v-else-if="currentPage === 'quests'"
+    @go-back="currentPage = 'dashboard'"
+  />
+
+  <Store
+    v-else-if="currentPage === 'store'"
     @go-back="currentPage = 'dashboard'"
   />
 
@@ -57,6 +63,7 @@ import Dashboard from './components/Dashboard.vue'
 import AdminDashboard from './components/AdminDashboard.vue'
 import Profile from './components/Profile.vue'
 import Quests from './components/Quests.vue'
+import Store from './components/Store.vue'
 import TeamSelection from './components/TeamSelection.vue'
 import LessonPage from './components/LessonPage.vue'
 import { authStore } from './authStore.js'

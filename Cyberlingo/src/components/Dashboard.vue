@@ -11,7 +11,7 @@
           Profile
         </button>
 
-        <button class="nav-btn btn-store">
+        <button class="nav-btn btn-store" @click="$emit('go-to-store')">
           <span class="icon">
             <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
               <path d="M20 4H4C2.9 4 2 4.9 2 6v2.5c0 .83.5 1.55 1.22 1.88V19c0 1.1.9 2 2 2h13.56c1.1 0 2-.9 2-2v-8.62C21.5 10.05 22 9.33 22 8.5V6c0-1.1-.9-2-2-2zm-1 15H5v-8h14v8zm1-10H4V6h16v3z"/>
@@ -122,6 +122,26 @@
             {{ authStore.userStats.streak }}
           </span>
         </div>
+        <div class="stat-item">
+          <span class="label">🪙 COINS</span>
+          <span class="value coins-value">{{ authStore.userStats.coins ?? 0 }}</span>
+        </div>
+      </div>
+
+      <!-- Admin coins setter -->
+      <div v-if="authStore.isAdmin" class="admin-streak-setter admin-coins-setter">
+        <span class="admin-streak-label">🪙 Coins setzen</span>
+        <div class="admin-streak-controls">
+          <button class="streak-adj coins-adj" @click="adminSetCoins((authStore.userStats.coins ?? 0) - 50)">−</button>
+          <input
+            class="streak-input"
+            type="number"
+            min="0"
+            :value="authStore.userStats.coins ?? 0"
+            @change="adminSetCoins(+$event.target.value)"
+          />
+          <button class="streak-adj coins-adj" @click="adminSetCoins((authStore.userStats.coins ?? 0) + 50)">+</button>
+        </div>
       </div>
 
       <!-- Admin streak setter -->
@@ -182,7 +202,7 @@ defineProps({
   }
 })
 
-const emit = defineEmits(['go-to-admin', 'toggle-theme', 'go-to-profile', 'go-to-quests', 'go-to-lesson', 'go-to-team-selection'])
+const emit = defineEmits(['go-to-admin', 'toggle-theme', 'go-to-profile', 'go-to-quests', 'go-to-store', 'go-to-lesson', 'go-to-team-selection'])
 
 function openTeamSelection() {
   emit('go-to-team-selection')
@@ -190,6 +210,11 @@ function openTeamSelection() {
 
 async function handleLogout() {
   await authStore.signOut()
+}
+
+function adminSetCoins(val) {
+  const n = Math.max(0, Number(val) || 0)
+  authStore.saveUserStats({ coins: n })
 }
 
 function adminSetStreak(val) {
@@ -438,6 +463,10 @@ function selectDifficulty(diff) {
   font-weight: 600;
 }
 
+.coins-value {
+  color: #f5b731;
+}
+
 /* Streak styling */
 .streak-value {
   display: flex;
@@ -617,6 +646,18 @@ function selectDifficulty(diff) {
 }
 .streak-adj:hover { background: rgba(139, 92, 246, 0.3); transform: scale(1.1); }
 .streak-adj:active { transform: scale(0.92); }
+
+.admin-coins-setter {
+  background: rgba(245, 183, 49, 0.08);
+  border-color: rgba(245, 183, 49, 0.25);
+}
+.admin-coins-setter .admin-streak-label { color: #f5b731; }
+.coins-adj {
+  border-color: rgba(245, 183, 49, 0.4) !important;
+  background: rgba(245, 183, 49, 0.15) !important;
+  color: #f5b731 !important;
+}
+.coins-adj:hover { background: rgba(245, 183, 49, 0.3) !important; }
 
 .streak-input {
   flex: 1;
