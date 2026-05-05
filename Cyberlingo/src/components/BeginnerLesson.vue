@@ -48,10 +48,61 @@
                     <div class="section-nav">
                       <button class="ask-ai-btn" @click="openAiChat(ti, si)">🤖 Ask AI</button>
                       <button v-if="si > 0" class="nav-btn-small" @click="currentStep[ti] = si - 1">← Zurück</button>
+                      <button class="nav-btn-small ask-ai-btn" @click.stop="openAiChat(ti, si, sec)">🤖 Ask AI</button>
                       <button v-if="si < topic.sections.length - 1" class="nav-btn-small primary" @click="currentStep[ti] = si + 1">Weiter →</button>
                       <button v-else class="nav-btn-small primary finish" @click="markTopicRead(ti)">🎉 Theorie abschließen</button>
                     </div>
                   </div>
+
+                  <!-- AI Chat Popup -->
+                  <Transition name="ai-chat-pop">
+                    <div
+                      v-if="aiChat.open && aiChat.topicIdx === ti && aiChat.sectionIdx === si"
+                      class="ai-chat-popup"
+                      @click.stop
+                    >
+                      <div class="ai-chat-header">
+                        <div class="ai-chat-title">
+                          <span class="ai-chat-icon">🤖</span>
+                          <span>AI Tutor</span>
+                        </div>
+                        <button class="ai-chat-close" @click="aiChat.open = false">✕</button>
+                      </div>
+                      <div class="ai-chat-context">
+                        <span class="ai-context-label">Kontext:</span> {{ sec.title }}
+                      </div>
+                      <div class="ai-chat-messages" ref="chatMessages">
+                        <div
+                          v-for="(msg, mi) in aiChat.messages"
+                          :key="mi"
+                          class="ai-chat-msg"
+                          :class="msg.role"
+                        >
+                          <span class="msg-avatar">{{ msg.role === 'user' ? '👤' : '🤖' }}</span>
+                          <div class="msg-bubble">{{ msg.text }}</div>
+                        </div>
+                        <div v-if="aiChat.loading" class="ai-chat-msg assistant">
+                          <span class="msg-avatar">🤖</span>
+                          <div class="msg-bubble typing">
+                            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="ai-chat-input-row">
+                        <input
+                          v-model="aiChat.input"
+                          class="ai-chat-input"
+                          placeholder="Stell eine Frage..."
+                          @keydown.enter.prevent="sendAiMessage"
+                          :disabled="aiChat.loading"
+                        />
+                        <button class="ai-send-btn" @click="sendAiMessage" :disabled="aiChat.loading || !aiChat.input.trim()">
+                          <span v-if="!aiChat.loading">➤</span>
+                          <span v-else class="spin">⟳</span>
+                        </button>
+                      </div>
+                    </div>
+                  </Transition>
                 </div>
               </div>
             </Transition>
@@ -277,7 +328,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { authStore } from '../authStore'
 import { askGemini, stripHtml } from '../utils/gemini.js'
 import leoBörekImg from '../assets/leo-borek.jpg'
@@ -325,14 +376,6 @@ const answered = ref(false)
 const correctCount = ref(0)
 const quizCompleted = ref(false)
 const openAnswers = ref({})
-
-const quizCoinsEarned = computed(() => {
-  const baseCoins = activeQuiz.value === 'final' ? 150 : 50
-  const mcCount = activeQuestions.value.filter(q => q.type !== 'open').length
-  const ratio = mcCount > 0 ? correctCount.value / mcCount : 1
-  const bonus = ratio === 1 ? 25 : 0
-  return Math.floor(baseCoins * ratio) + bonus
-})
 
 function isTopicUnlocked(ti) {
   if (ti === 0) return true
@@ -927,7 +970,229 @@ const finalQuizQuestions = [
 .htl-box { background: rgba(243, 156, 18, 0.08); border-left: 3px solid #f39c12; }
 .tool-label, .htl-label { font-weight: 700; display: block; margin-bottom: 0.2rem; color: var(--text-primary); }
 
-.section-nav { display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; }
+.section-nav { display: flex; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Ask AI Button */
+.ask-ai-btn {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15)) !important;
+  border-color: rgba(139, 92, 246, 0.5) !important;
+  color: #a78bfa !important;
+  font-weight: 700 !important;
+  margin-right: auto;
+}
+.ask-ai-btn:hover {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.3)) !important;
+  border-color: #a78bfa !important;
+  color: #c4b5fd !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+}
+
+/* AI Chat Popup */
+.ai-chat-popup {
+  position: relative;
+  margin-top: 1rem;
+  background: var(--bg-card);
+  border: 1.5px solid rgba(139, 92, 246, 0.4);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  max-height: 420px;
+}
+
+.ai-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.1));
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  flex-shrink: 0;
+}
+
+.ai-chat-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #c4b5fd;
+}
+
+.ai-chat-icon {
+  font-size: 1.1rem;
+  animation: floatIcon 2s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.ai-chat-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.ai-chat-close:hover { background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: #f87171; }
+
+.ai-chat-context {
+  padding: 0.4rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: rgba(139, 92, 246, 0.05);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ai-context-label {
+  font-weight: 700;
+  color: #a78bfa;
+  margin-right: 0.25rem;
+}
+
+.ai-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-height: 140px;
+  max-height: 240px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+}
+
+.ai-chat-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.ai-chat-msg.user { flex-direction: row-reverse; }
+
+.msg-avatar {
+  font-size: 1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.msg-bubble {
+  max-width: 85%;
+  padding: 0.55rem 0.9rem;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ai-chat-msg.assistant .msg-bubble {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: var(--text-primary);
+  border-radius: 4px 14px 14px 14px;
+}
+
+.ai-chat-msg.user .msg-bubble {
+  background: rgba(31, 179, 156, 0.15);
+  border: 1px solid rgba(31, 179, 156, 0.25);
+  color: var(--text-primary);
+  border-radius: 14px 4px 14px 14px;
+}
+
+/* Typing animation */
+.msg-bubble.typing {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.7rem 1rem;
+  min-width: 52px;
+}
+
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #a78bfa;
+  animation: bounce 1.2s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+.ai-chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-top: 1px solid rgba(139, 92, 246, 0.15);
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.1);
+}
+
+.ai-chat-input {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.ai-chat-input:focus { border-color: #a78bfa; }
+.ai-chat-input::placeholder { color: var(--text-secondary); opacity: 0.6; }
+
+.ai-send-btn {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #7c3aed, #3b82f6);
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.ai-send-btn:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 4px 16px rgba(124, 58, 237, 0.5); }
+.ai-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.spin { display: inline-block; animation: spinIcon 0.8s linear infinite; }
+@keyframes spinIcon { to { transform: rotate(360deg); } }
+
+/* AI Chat popup transition */
+.ai-chat-pop-enter-active { animation: chatSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.ai-chat-pop-leave-active { animation: chatSlideOut 0.2s ease forwards; }
+
+@keyframes chatSlideIn {
+  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes chatSlideOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-8px) scale(0.97); }
+}
 
 /* Column Connector lines */
 .col-connector { display: flex; flex-direction: column; align-items: center; height: 36px; }
